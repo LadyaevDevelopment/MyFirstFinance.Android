@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_title">Something went wrong…</string>
+    <string name="commonError_connection">Check your connection state and try again</string>
+    <string name="commonError_external">Some external error has been occurred. Contact to support or try again later</string>
+    <string name="commonError_unknown">Some unknown error has been occurred. Update your app or contact to support</string>
+
+    <string name="inDevelopment_title">This functionality in development</string>
+    <string name="inDevelopment_message">We\'re trying to make our app better</string>
+
+    <string name="app_name">MYF</string>
+    <string name="and">and</string>
+    <string name="next">next</string>
+    <string name="search">search</string>
+    <string name="ok">OK</string>
+
+    <string name="startMenu_login">log in</string>
+    <string name="startMenu_register">sign up</string>
+    <string name="startMenu_policyDocuments">By tapping Sign Up, you agree to our</string>
+
+    <string name="phoneNumber_title">phone number</string>
+    <string name="phoneNumber_subtitle">we use phone number to identify your personality</string>
+
+    <string name="chooseCountry_title">choose your country</string>
+
+    <string name="confirmationCode_title">code\nfrom sms</string>
+    <string name="confirmationCode_sentTo">sent to:</string>
+    <string name="confirmationCode_resendIn">resend in %d:%02d</string>
+    <string name="confirmationCode_resend">resend</string>
+    <string name="confirmationCode_support">contact support</string>
+
+    <string name="birthDate_title">date of birth</string>
+    <string name="birthDate_subtitle">this information will be used to check your capabilities</string>
+    <string name="birthDate_error_minorAge">sorry, you\'re not 18 yet</string>
+    <string name="name_title">your name</string>
+    <string name="name_placeholder_lastName">last name</string>
+    <string name="name_placeholder_firstName">first name</string>
+    <string name="name_placeholder_middleName">middle name</string>
+    <string name="email_title">email address</string>
+    <string name="email_bs_title">check your inbox</string>
+    <string name="email_bs_subtitle">We have sent a confirmation code to %s</string>
+
+    <string name="residenceAddress_title">residence address</string>
+    <string name="residenceAddress_country_hint">country</string>
+    <string name="residenceAddress_city_hint">town/city</string>
+    <string name="residenceAddress_street_hint">street/place</string>
+    <string name="residenceAddress_buildingNumber_hint">building</string>
+    <string name="residenceAddress_apartment_hint">apartment</string>
+
+    <string name="createPinCode_title">create\npin code</string>
+    <string name="confirmPinCode_title">confirm\npin code</string>
+
+    <string name="completeRegistration_title">welcome to\nour family!</string>
+    <string name="completeRegistration_next">nice to meet you!</string>
+</resources>
