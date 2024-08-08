@@ -1,7 +1,7 @@
 package ladyaev.development.myFirstFinance.core.ui.state
 
 import kotlinx.coroutines.CoroutineScope
-import ladyaev.development.myFirstFinance.core.common.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 
 abstract class ViewModelStateAbstract<UiState : Any, StateTransmission : Any, Implementation : Any>(

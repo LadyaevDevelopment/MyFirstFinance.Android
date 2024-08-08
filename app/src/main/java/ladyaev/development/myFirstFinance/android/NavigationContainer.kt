@@ -11,18 +11,18 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmPi
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmationCodeScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.PhoneNumberScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.birthDate.BirthDateScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.chooseCountry.ChooseCountryScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.completeRegistration.CompleteRegistrationScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.confirmPinCodeScreen.ConfirmPinCodeScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.confirmationCode.ConfirmationCodeScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.createPinCode.CreatePinCodeScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.email.EmailScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.name.NameScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.phoneNumber.PhoneNumberScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.residenceAddress.ResidenceAddressScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.splash.SplashScreen
-import ladyaev.development.myFirstFinance.feature.setupUser.screens.startMenu.StartMenuScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.birthDate.BirthDateScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.chooseCountry.ChooseCountryScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.completeRegistration.CompleteRegistrationScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.confirmPinCodeScreen.ConfirmPinCodeScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.confirmationCode.ConfirmationCodeScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.createPinCode.CreatePinCodeScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.email.EmailScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.name.NameScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.phoneNumber.PhoneNumberScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.residenceAddress.ResidenceAddressScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.splash.SplashScreen
+import ladyaev.development.myFirstFinance.feature.setupUser.presentation.startMenu.StartMenuScreen
 import ladyaev.development.myFirstFinance.featureDashboard.home.HomeScreen
 
 private const val ARGUMENT_KEY = "argument"

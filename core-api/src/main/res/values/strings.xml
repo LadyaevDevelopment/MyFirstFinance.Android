@@ -1,0 +1,32 @@
+<resources>
+	 <string name="enum_apiUserStatus_needToCreatePinCode">NeedToCreatePinCode</string>
+	 <string name="enum_apiUserStatus_needToSpecifyBirthDate">NeedToSpecifyBirthDate</string>
+	 <string name="enum_apiUserStatus_needToSpecifyEmail">NeedToSpecifyEmail</string>
+	 <string name="enum_apiUserStatus_needToSpecifyIdentityDocument">NeedToSpecifyIdentityDocument</string>
+	 <string name="enum_apiUserStatus_needToSpecifyName">NeedToSpecifyName</string>
+	 <string name="enum_apiUserStatus_needToSpecifyResidenceAddress">NeedToSpecifyResidenceAddress</string>
+	 <string name="enum_apiUserStatus_registered">Registered</string>
+	 <string name="enum_operationStatus_failed">Failed</string>
+	 <string name="enum_operationStatus_forbidden">Forbidden</string>
+	 <string name="enum_operationStatus_invalidRequest">InvalidRequest</string>
+	 <string name="enum_operationStatus_notFound">NotFound</string>
+	 <string name="enum_operationStatus_success">Success</string>
+	 <string name="enum_operationStatus_tooManyRequests">TooManyRequests</string>
+	 <string name="enum_operationStatus_unsupportedApiVersion">UnsupportedApiVersion</string>
+	 <string name="enum_requireConfirmationCodeApiErrorType_userBlocked">UserBlocked</string>
+	 <string name="enum_requireConfirmationCodeApiErrorType_userTemporaryBlocked">UserTemporaryBlocked</string>
+	 <string name="enum_specifyBirthDateApiErrorType_invalidData">InvalidData</string>
+	 <string name="enum_specifyBirthDateApiErrorType_userIsMinor">UserIsMinor</string>
+	 <string name="enum_specifyUserInfoApiErrorType_invalidData">InvalidData</string>
+	 <string name="enum_userStatus_needToCreatePinCode">NeedToCreatePinCode</string>
+	 <string name="enum_userStatus_needToSpecifyBirthDate">NeedToSpecifyBirthDate</string>
+	 <string name="enum_userStatus_needToSpecifyEmail">NeedToSpecifyEmail</string>
+	 <string name="enum_userStatus_needToSpecifyIdentityDocument">NeedToSpecifyIdentityDocument</string>
+	 <string name="enum_userStatus_needToSpecifyName">NeedToSpecifyName</string>
+	 <string name="enum_userStatus_needToSpecifyResidenceAddress">NeedToSpecifyResidenceAddress</string>
+	 <string name="enum_userStatus_registered">Registered</string>
+	 <string name="enum_verifyConfirmationCodeApiErrorType_codeLifeTimeExpired">CodeLifeTimeExpired</string>
+	 <string name="enum_verifyConfirmationCodeApiErrorType_failedCodeConfirmationAttemptCountExceeded">FailedCodeConfirmationAttemptCountExceeded</string>
+	 <string name="enum_verifyConfirmationCodeApiErrorType_wrongCode">WrongCode</string>
+</resources>
+

@@ -2,8 +2,8 @@ package ladyaev.development.myFirstFinance.core.ui.transmission
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import ladyaev.development.myFirstFinance.core.common.Post
-import ladyaev.development.myFirstFinance.core.common.Read
+import ladyaev.development.myFirstFinance.core.common.interfaces.Post
+import ladyaev.development.myFirstFinance.core.common.interfaces.Read
 import java.lang.Exception
 
 interface Transmission {

@@ -1,8 +1,8 @@
 package ladyaev.development.myFirstFinance.core.ui.error
 
-import ladyaev.development.myFirstFinance.core.common.ManageResources
-import ladyaev.development.myFirstFinance.core.common.StandardError
-import ladyaev.development.myFirstFinance.core.common.Transformation
+import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
+import ladyaev.development.myfirstfinance.domain.operation.StandardError
+import ladyaev.development.myFirstFinance.core.common.interfaces.Transformation
 import ladyaev.development.myFirstFinance.core.resources.R
 
 interface HandleError : Transformation<StandardError, String> {

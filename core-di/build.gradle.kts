@@ -43,8 +43,8 @@ dependencies {
     implementation(libs.dagger)
     kapt(libs.dagger.compiler)
 
-    implementation(project(":domain-repository"))
-    implementation(project(":data-mock"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
     implementation(project(":core-common"))
     implementation(project(":core-ui"))
 }

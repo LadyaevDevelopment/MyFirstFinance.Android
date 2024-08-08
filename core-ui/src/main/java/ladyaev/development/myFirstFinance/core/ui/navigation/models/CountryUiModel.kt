@@ -2,7 +2,7 @@ package ladyaev.development.myFirstFinance.core.ui.navigation.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import ladyaev.development.myFirstFinance.domain.entities.Country
+import ladyaev.development.myfirstfinance.domain.entities.Country
 
 @Parcelize
 data class CountryUiModel(
@@ -12,8 +12,8 @@ data class CountryUiModel(
     val phoneNumberMasks: List<String>
 ) : Parcelable
 
-fun CountryUiModel.toEntity(): Country {
-    return Country(
+fun CountryUiModel.toEntity(): ladyaev.development.myfirstfinance.domain.entities.Country {
+    return ladyaev.development.myfirstfinance.domain.entities.Country(
         name = name,
         phoneNumberCode = phoneNumberCode,
         flagPath = flagPath,
@@ -21,7 +21,7 @@ fun CountryUiModel.toEntity(): Country {
     )
 }
 
-fun Country.toUiModel(): CountryUiModel {
+fun ladyaev.development.myfirstfinance.domain.entities.Country.toUiModel(): CountryUiModel {
     return CountryUiModel(
         name = name,
         phoneNumberCode = phoneNumberCode,

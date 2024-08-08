@@ -71,7 +71,6 @@ dependencies {
     implementation(project(":core-common"))
     implementation(project(":core-ui"))
     implementation(project(":core-di"))
-    implementation(project(":domain-entities"))
-    implementation(project(":domain-repository"))
-    implementation(project(":data-mock"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
 }

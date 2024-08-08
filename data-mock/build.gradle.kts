@@ -39,10 +39,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.dagger)
-    implementation(project(":core-common"))
-    implementation(project(":core-common"))
     kapt(libs.dagger.compiler)
 
-    implementation(project(":domain-entities"))
-    implementation(project(":domain-repository"))
+    implementation(project(":core-common"))
+    implementation(project(":domain"))
 }

@@ -2,8 +2,8 @@ package ladyaev.development.myFirstFinance.core.di
 
 import dagger.Binds
 import dagger.Module
-import ladyaev.development.myFirstFinance.core.common.ManageDispatchers
-import ladyaev.development.myFirstFinance.core.common.PhoneNumberValidation
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidation
 
 @Module
 interface PhoneNumberValidationModule {

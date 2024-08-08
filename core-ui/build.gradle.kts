@@ -57,5 +57,5 @@ dependencies {
     implementation(libs.androidx.material)
 
     implementation(project(":core-common"))
-    implementation(project(":domain-entities"))
+    implementation(project(":domain"))
 }

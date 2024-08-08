@@ -2,7 +2,7 @@ package ladyaev.development.myFirstFinance.core.ui.navigation.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import ladyaev.development.myFirstFinance.core.common.PhoneNumber
+import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 
 @Parcelize
 data class PhoneNumberUiModel(

@@ -3,16 +3,22 @@ package ladyaev.development.myFirstFinance.core.di
 import android.content.Context
 import dagger.BindsInstance
 import dagger.Component
-import ladyaev.development.myFirstFinance.core.common.ManageDispatchers
-import ladyaev.development.myFirstFinance.core.common.ManageResources
-import ladyaev.development.myFirstFinance.core.common.PhoneNumberValidation
+import ladyaev.development.myFirstFinance.core.common.utils.CurrentDate
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
+import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidation
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
-import ladyaev.development.myFirstFinance.domain.repository.misc.MiscRepository
-import ladyaev.development.myFirstFinance.domain.repository.setupUser.SetupUserRepository
+import ladyaev.development.myfirstfinance.domain.repositories.misc.MiscRepository
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [RepositoryModule::class, MiscModule::class, PhoneNumberValidationModule::class])
+@Component(modules = [
+    RepositoryModule::class,
+    MiscProvidesModule::class,
+    PhoneNumberValidationModule::class,
+    MiscBindsModule::class
+])
 interface AppComponent {
 
     val miscRepository: MiscRepository
@@ -28,6 +34,8 @@ interface AppComponent {
     val manageDispatchers: ManageDispatchers
 
     val manageResources: ManageResources
+
+    val currentDate: CurrentDate
 
     @Component.Builder
     interface Builder {
