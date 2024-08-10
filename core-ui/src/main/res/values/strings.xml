@@ -2,6 +2,7 @@
 <resources>
     <string name="error_title">Something went wrong…</string>
     <string name="commonError_connection">Check your connection state and try again</string>
+    <string name="commonError_needToUpdateApplication">Your application version is obsolete. Please, update our app to use all its features</string>
     <string name="commonError_external">Some external error has been occurred. Contact to support or try again later</string>
     <string name="commonError_unknown">Some unknown error has been occurred. Update your app or contact to support</string>
 

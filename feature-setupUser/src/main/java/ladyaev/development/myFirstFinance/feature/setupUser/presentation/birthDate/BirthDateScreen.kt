@@ -44,7 +44,7 @@ fun BirthDateScreen(
     }
 
     FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime)
+        viewModel.initialize(firstTime, Unit)
     }
 
     SingleLiveEffect(transmission = viewModel.effect) {

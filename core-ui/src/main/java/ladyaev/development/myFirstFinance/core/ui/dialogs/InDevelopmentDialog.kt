@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import ladyaev.development.myFirstFinance.core.resources.R
 
-class InDevelopmentDialog {
-}
+class InDevelopmentDialog
+
 @Composable
 fun InDevelopmentDialog(
     visible: Boolean,

@@ -7,23 +7,26 @@ import ladyaev.development.myfirstfinance.domain.entities.Country
 @Parcelize
 data class CountryUiModel(
     val name: String,
+    val iso2Code: String,
     val phoneNumberCode: String,
     val flagPath: String,
     val phoneNumberMasks: List<String>
 ) : Parcelable
 
-fun CountryUiModel.toEntity(): ladyaev.development.myfirstfinance.domain.entities.Country {
-    return ladyaev.development.myfirstfinance.domain.entities.Country(
+fun CountryUiModel.toEntity(): Country {
+    return Country(
         name = name,
+        iso2Code = iso2Code,
         phoneNumberCode = phoneNumberCode,
         flagPath = flagPath,
         phoneNumberMasks = phoneNumberMasks,
     )
 }
 
-fun ladyaev.development.myfirstfinance.domain.entities.Country.toUiModel(): CountryUiModel {
+fun Country.toUiModel(): CountryUiModel {
     return CountryUiModel(
         name = name,
+        iso2Code = iso2Code,
         phoneNumberCode = phoneNumberCode,
         flagPath = flagPath,
         phoneNumberMasks = phoneNumberMasks,

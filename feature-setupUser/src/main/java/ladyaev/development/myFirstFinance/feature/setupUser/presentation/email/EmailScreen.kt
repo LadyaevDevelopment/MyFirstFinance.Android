@@ -38,7 +38,7 @@ fun EmailScreen(
     val focusManager = LocalFocusManager.current
 
     FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime)
+        viewModel.initialize(firstTime, Unit)
     }
 
     SingleLiveEffect(transmission = viewModel.effect) {

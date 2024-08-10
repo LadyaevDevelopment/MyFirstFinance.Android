@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import ladyaev.development.myFirstFinance.core.common.misc.Email
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
@@ -11,32 +12,30 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.feature.setupUser.presentation.misc.FeatureData
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
+import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyEmailUseCase
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
+import ladyaev.development.myfirstfinance.domain.operation.StandardError
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
 import javax.inject.Inject
 
 open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
-    private val setupUserRepository: SetupUserRepository,
+    private val specifyEmailUseCase: SpecifyEmailUseCase,
     private val featureData: FeatureData,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Unit> {
 
     private val viewModelState = ViewModelState()
 
     val state: StateTransmission get() = mutableState.read()
 
     val effect: EffectTransmission get() = mutableEffect.read()
-
-    fun initialize(firstTime: Boolean) {
-        if (firstTime) {
-
-        }
-    }
 
     fun on(event: UserEvent) {
         when (event) {
@@ -86,14 +85,51 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
             viewModelState.dispatch {
                 bottomSheetVisible = false
             }
-            dispatchers.launchMain(viewModelScope) {
-                doOnHideKeyboard {
-                    mutableEffect.post(
-                        UiEffect.Navigation(
-                            NavigationEvent.Navigate(
-                                Screen.SetupUser.ResidenceAddress(
-                                    ResidenceAddressScreenArguments(
-                                        chosenCountry = featureData.country?.toUiModel())))))
+            specifyEmail()
+        }
+    }
+
+    private fun specifyEmail() {
+        dispatchers.launchBackground(viewModelScope) {
+            viewModelState.dispatch {
+                operationActive = true
+            }
+            val result = specifyEmailUseCase.process(Email(viewModelState.email))
+            viewModelState.dispatch {
+                operationActive = false
+            }
+
+            when (result) {
+                is OperationResult.SpecificFailure -> {
+                    when (result.error) {
+                        SpecifyUserInfoError.InvalidData -> {
+                            viewModelState.dispatch {
+                                errorState = ErrorState(
+                                    true,
+                                    handleError.map(StandardError.Unknown(null))
+                                )
+                            }
+                        }
+                    }
+                }
+                is OperationResult.StandardFailure -> {
+                    viewModelState.dispatch {
+                        errorState = ErrorState(
+                            true,
+                            handleError.map(result.error)
+                        )
+                    }
+                }
+                is OperationResult.Success -> {
+                    dispatchers.launchMain(viewModelScope) {
+                        doOnHideKeyboard {
+                            mutableEffect.post(
+                                UiEffect.Navigation(
+                                    NavigationEvent.Navigate(
+                                        Screen.SetupUser.ResidenceAddress(
+                                            ResidenceAddressScreenArguments(chosenCountry = featureData.country?.toUiModel())))))
+                        }
+                    }
                 }
             }
         }
@@ -109,7 +145,8 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
         val email: String = "",
         val nextButtonEnabled: Boolean = false,
         val bottomSheetVisible: Boolean = false,
-        val errorState: ErrorState = ErrorState(false)
+        val errorState: ErrorState = ErrorState(false),
+        val progressbarVisible: Boolean = false
     )
 
     sealed class UserEvent {
@@ -125,6 +162,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
         var email: String = ""
         var bottomSheetVisible: Boolean = false
         var errorState: ErrorState = ErrorState(false)
+        var operationActive: Boolean = false
 
         override fun implementation() = this
 
@@ -132,17 +170,18 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
             email = email,
             nextButtonEnabled = email.isNotBlank(),
             bottomSheetVisible = bottomSheetVisible,
-            errorState = errorState
+            errorState = errorState,
+            progressbarVisible = operationActive
         )
     }
 
     class Base @Inject constructor(
         handleError: HandleError,
-        setupUserRepository: ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository,
+        specifyEmailUseCase: SpecifyEmailUseCase,
         featureData: FeatureData
     ) : EmailViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
-        setupUserRepository,
+        specifyEmailUseCase,
         featureData,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),

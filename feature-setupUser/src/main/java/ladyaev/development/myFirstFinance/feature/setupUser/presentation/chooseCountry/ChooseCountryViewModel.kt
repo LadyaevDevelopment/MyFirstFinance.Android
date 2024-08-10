@@ -4,25 +4,28 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
-import ladyaev.development.myFirstFinance.core.di.CountryCache
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.PhoneNumberScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.ChooseCountryUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireCountriesUseCase
 import javax.inject.Inject
 
 open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission : Any>(
-    private val countryCache: CountryCache,
+    private val requireCountriesUseCase: RequireCountriesUseCase,
+    private val chooseCountryUseCase: ChooseCountryUseCase,
     private val handleError: HandleError,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Unit> {
 
     private val viewModelState = ViewModelState()
 
@@ -30,7 +33,7 @@ open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission :
 
     val effect: EffectTransmission get() = mutableEffect.read()
 
-    fun initialize(firstTime: Boolean) {
+    override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             requireCountries()
         }
@@ -41,7 +44,7 @@ open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission :
             viewModelState.dispatch {
                 loadingData = true
             }
-            val result = countryCache.data(viewModelScope)
+            val result = requireCountriesUseCase.process(viewModelScope)
             viewModelState.dispatch {
                 loadingData = false
             }
@@ -72,12 +75,12 @@ open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission :
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
+                chooseCountryUseCase.process(viewModelState.chosenCountry)
                 mutableEffect.post(
                     UiEffect.Navigation(
                         NavigationEvent.PopTo(
                             screen = Screen.SetupUser.PhoneNumber(PhoneNumberScreenArguments(viewModelState.chosenCountry?.toUiModel())),
-                            inclusive = false
-                        )))
+                            inclusive = false)))
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {
@@ -131,10 +134,12 @@ open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission :
     }
 
     class Base @Inject constructor(
-        countryCache: CountryCache,
+        requireCountriesUseCase: RequireCountriesUseCase,
+        chooseCountryUseCase: ChooseCountryUseCase,
         handleError: HandleError
     ) : ChooseCountryViewModel<LiveData<UiState>, LiveData<UiEffect>>(
-        countryCache,
+        requireCountriesUseCase,
+        chooseCountryUseCase,
         handleError,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),

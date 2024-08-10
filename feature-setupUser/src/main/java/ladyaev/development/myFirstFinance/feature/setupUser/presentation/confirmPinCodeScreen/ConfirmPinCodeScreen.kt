@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ladyaev.development.myFirstFinance.core.common.misc.Code
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.pinCodeKeyboard.PinCodeKeyboard
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.PinCodeProgressView
@@ -35,7 +36,7 @@ fun ConfirmPinCodeScreen(
     viewModel: ConfirmPinCodeViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
     FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, arguments.pinCode)
+        viewModel.initialize(firstTime, Code(arguments.pinCode))
     }
 
     SingleLiveEffect(transmission = viewModel.effect) {

@@ -4,17 +4,17 @@ import kotlinx.coroutines.delay
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import ladyaev.development.myfirstfinance.domain.entities.PolicyDocument
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
-import ladyaev.development.myfirstfinance.domain.repositories.misc.CountriesData
+import ladyaev.development.myfirstfinance.domain.repositories.misc.requireCountries.RequireCountriesResult
 import ladyaev.development.myfirstfinance.domain.repositories.misc.MiscRepository
-import ladyaev.development.myfirstfinance.domain.repositories.misc.PolicyDocumentsData
+import ladyaev.development.myfirstfinance.domain.repositories.misc.requirePolicyDocuments.RequirePolicyDocumentsResult
 import javax.inject.Inject
 
 class MiscRepositoryMock @Inject constructor() : MiscRepository {
 
-    override suspend fun policyDocuments(): OperationResult<PolicyDocumentsData, Unit> {
+    override suspend fun policyDocuments(): OperationResult<RequirePolicyDocumentsResult, Unit> {
         delay(500)
         return OperationResult.Success(
-            PolicyDocumentsData(
+            RequirePolicyDocumentsResult(
                 items = listOf(
                     PolicyDocument(
                         "Privacy Policy",
@@ -33,13 +33,14 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
         )
     }
 
-    override suspend fun countries(): OperationResult<CountriesData, Unit> {
+    override suspend fun countries(): OperationResult<RequireCountriesResult, Unit> {
         delay(500)
         return OperationResult.Success(
-            CountriesData(
+            RequireCountriesResult(
                 listOf(
                     Country(
                         "United Arab Emirates",
+                        "AE",
                         "+971",
                         "https://i.pinimg.com/originals/f5/ea/7f/f5ea7fb6ae1a02b5c6fd01a52e90f525.png",
                         listOf(
@@ -49,6 +50,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Andorra",
+                        "AD",
                         "+971",
                         "https://avatars.mds.yandex.net/i?id=8a0209f2c66031786bc673915b0086918a91177a5fe1d3d9-5488408-images-thumbs&n=13",
                         listOf(
@@ -57,6 +59,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -65,6 +68,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania2",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -73,6 +77,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania3",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -81,6 +86,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania4",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -89,6 +95,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania5",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -97,6 +104,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania6",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -105,6 +113,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania7",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -113,6 +122,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania8",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -121,6 +131,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania9",
+                        "AB",
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(

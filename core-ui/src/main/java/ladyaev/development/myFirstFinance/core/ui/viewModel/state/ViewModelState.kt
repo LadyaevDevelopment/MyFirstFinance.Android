@@ -1,4 +1,4 @@
-package ladyaev.development.myFirstFinance.core.ui.state
+package ladyaev.development.myFirstFinance.core.ui.viewModel.state
 
 import kotlinx.coroutines.CoroutineScope
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers

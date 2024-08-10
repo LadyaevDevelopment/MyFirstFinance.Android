@@ -13,6 +13,8 @@ import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
+import ladyaev.development.myFirstFinance.core.common.misc.Code
+import ladyaev.development.myFirstFinance.core.common.misc.Id
 import ladyaev.development.myFirstFinance.core.di.timer
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellData
@@ -22,9 +24,12 @@ import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireConfirmationCodeUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.business.VerifyConfirmationCodeUseCase
+import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyConfirmationCode.VerifyConfirmationCodeError
 import javax.inject.Inject
@@ -32,11 +37,12 @@ import javax.inject.Inject
 open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val manageResources: ManageResources,
-    private val setupUserRepository: SetupUserRepository,
+    private val requireConfirmationCodeUseCase: RequireConfirmationCodeUseCase,
+    private val verifyConfirmationCodeUseCase: VerifyConfirmationCodeUseCase,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<PhoneNumber> {
 
     private val viewModelState = ViewModelState()
 
@@ -46,12 +52,12 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
 
     val effect: EffectTransmission get() = mutableEffect.read()
 
-    fun initialize(firstTime: Boolean, phoneNumber: PhoneNumber) {
+    override fun initialize(firstTime: Boolean, data: PhoneNumber) {
         if (firstTime) {
             viewModelState.dispatch {
-                this.phoneNumber = phoneNumber
+                phoneNumber = data
             }
-            requireConfirmationCode(phoneNumber)
+            requireConfirmationCode(data)
         }
     }
 
@@ -73,13 +79,18 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
-            val result = setupUserRepository.requireConfirmationCode(phoneNumber)
+            val result = requireConfirmationCodeUseCase.process(phoneNumber)
             viewModelState.dispatch {
                 requireCodeOperationActive = false
             }
             when (result) {
                 is OperationResult.StandardFailure -> {
-                    mutableEffect.post(UiEffect.ShowErrorMessage(handleError.map(result.error)))
+                    viewModelState.dispatch {
+                        errorState = ErrorState(
+                            true,
+                            handleError.map(result.error)
+                        )
+                    }
                 }
                 is OperationResult.SpecificFailure -> {
                     when (result.error) {
@@ -95,27 +106,35 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                         is RequireConfirmationCodeError.UserTemporaryBlocked -> {
 
                         }
+                        RequireConfirmationCodeError.InvalidData -> {
+                            viewModelState.dispatch {
+                                errorState = ErrorState(
+                                    true,
+                                    handleError.map(StandardError.Unknown(null))
+                                )
+                            }
+                        }
                     }
                 }
                 is OperationResult.Success -> {
                     viewModelState.dispatch {
                         enteredCode = ""
                         codeInputState = CodeInputState.Default
-                        codeLength = result.data.codeLength
+                        codeLength = result.data.codeLength.data
                         codeId = result.data.codeId
                     }
-                    startTimer(result.data.resendingTimeInterval.seconds)
+                    startTimer(result.data.resendingTimeInterval.data)
                 }
             }
         }
     }
 
-    private fun verifyConfirmationCode(codeId: String, code: String) {
+    private fun verifyConfirmationCode(codeId: Id, code: Code) {
         dispatchers.launchBackground(viewModelScope) {
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
-            val result = setupUserRepository.verifyConfirmationCode(
+            val result = verifyConfirmationCodeUseCase.process(
                 codeId = codeId,
                 code = code
             )
@@ -124,7 +143,12 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             }
             when (result) {
                 is OperationResult.StandardFailure -> {
-                    mutableEffect.post(UiEffect.ShowErrorMessage(handleError.map(result.error)))
+                    viewModelState.dispatch {
+                        errorState = ErrorState(
+                            true,
+                            handleError.map(result.error)
+                        )
+                    }
                 }
                 is OperationResult.SpecificFailure -> {
                     when (result.error) {
@@ -180,7 +204,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                                 enteredCode = newCode
                             }
                             if (newCode.length == viewModelState.codeLength) {
-                                verifyConfirmationCode(viewModelState.codeId, newCode)
+                                verifyConfirmationCode(viewModelState.codeId, Code(newCode))
                             }
                         }
                     }
@@ -217,7 +241,6 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
     }
 
     sealed class UiEffect {
-        data class ShowErrorMessage(val message: String) : UiEffect()
         data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
@@ -252,11 +275,11 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         var remainingTime: Seconds = Seconds(0)
         var codeLength: Int = 0
         var enteredCode: String = ""
-        var codeId: String = ""
+        var codeId: Id = Id("")
         var codeInputState: CodeInputState = CodeInputState.Default
         var errorState: ErrorState = ErrorState(false)
         var inDevelopmentDialogVisible: Boolean = false
-        val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.seconds == 0
+        val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.data == 0
 
         override fun implementation() = this
 
@@ -285,8 +308,8 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
                 else -> manageResources.string(
                     R.string.confirmationCode_resendIn,
-                    remainingTime.seconds / 60,
-                    remainingTime.seconds % 60
+                    remainingTime.data / 60,
+                    remainingTime.data % 60
                 )
             }
         }
@@ -295,11 +318,13 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
     class Base @Inject constructor(
         handleError: HandleError,
         manageResources: ManageResources,
-        setupUserRepository: SetupUserRepository,
+        requireConfirmationCodeUseCase: RequireConfirmationCodeUseCase,
+        verifyConfirmationCodeUseCase: VerifyConfirmationCodeUseCase,
     ) : ConfirmationCodeViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         manageResources,
-        setupUserRepository,
+        requireConfirmationCodeUseCase,
+        verifyConfirmationCodeUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

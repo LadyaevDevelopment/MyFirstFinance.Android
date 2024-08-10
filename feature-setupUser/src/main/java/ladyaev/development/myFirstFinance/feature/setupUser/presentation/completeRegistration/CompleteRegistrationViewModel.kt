@@ -6,18 +6,15 @@ import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
 import javax.inject.Inject
 
 abstract class CompleteRegistrationViewModel<EffectTransmission : Any>(
     private val dispatchers: ManageDispatchers,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Unit> {
 
     val effect: EffectTransmission get() = mutableEffect.read()
-
-    fun initialize(firstTime: Boolean) {
-
-    }
 
     fun on(event: UserEvent) {
         when (event) {

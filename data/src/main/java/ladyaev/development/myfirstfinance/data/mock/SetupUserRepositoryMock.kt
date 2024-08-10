@@ -1,13 +1,19 @@
 package ladyaev.development.myfirstfinance.data.mock
 
 import kotlinx.coroutines.delay
+import ladyaev.development.myFirstFinance.core.common.misc.Code
+import ladyaev.development.myFirstFinance.core.common.misc.Email
+import ladyaev.development.myFirstFinance.core.common.misc.Id
+import ladyaev.development.myFirstFinance.core.common.misc.Length
+import ladyaev.development.myFirstFinance.core.common.misc.Name
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
+import ladyaev.development.myfirstfinance.domain.entities.ResidenceAddress
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SpecifyUserInfoError
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SpecifyUserInfoResult
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeData
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoResult
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeResult
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.specifyBirthDate.SpecifyBirthDateError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyConfirmationCode.VerifyConfirmationCodeError
@@ -15,23 +21,23 @@ import java.util.Date
 import javax.inject.Inject
 
 class SetupUserRepositoryMock @Inject constructor() : SetupUserRepository {
-    override suspend fun requireConfirmationCode(phoneNumber: PhoneNumber): OperationResult<RequireConfirmationCodeData, RequireConfirmationCodeError> {
+    override suspend fun requireConfirmationCode(phoneNumber: PhoneNumber): OperationResult<RequireConfirmationCodeResult, RequireConfirmationCodeError> {
         delay(500)
         return OperationResult.Success(
-            RequireConfirmationCodeData(
-                5,
-                "0",
+            RequireConfirmationCodeResult(
+                Length(5),
+                Id("0"),
                 Seconds(10)
             )
         )
     }
 
     override suspend fun verifyConfirmationCode(
-        codeId: String,
-        code: String
+        codeId: Id,
+        code: Code
     ): OperationResult<Unit, VerifyConfirmationCodeError> {
         delay(500)
-        return if (code == "11111") {
+        return if (code.data == "11111") {
             OperationResult.SpecificFailure(VerifyConfirmationCodeError.WrongCode)
         } else {
             OperationResult.Success(Unit)
@@ -42,31 +48,19 @@ class SetupUserRepositoryMock @Inject constructor() : SetupUserRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun specifyName(
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
+    override suspend fun specifyName(name: Name): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun specifyEmail(email: String): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
+    override suspend fun specifyEmail(email: Email): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun specifyPinCode(email: String): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
+    override suspend fun specifyPinCode(pinCode: Code): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun specifyResidenceAddress(
-        countryIso2Code: String,
-        city: String,
-        street: String,
-        buildingNumber: String,
-        apartment: String
-    ): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
+    override suspend fun specifyResidenceAddress(residenceAddress: ResidenceAddress): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
         TODO("Not yet implemented")
     }
-
-
 }

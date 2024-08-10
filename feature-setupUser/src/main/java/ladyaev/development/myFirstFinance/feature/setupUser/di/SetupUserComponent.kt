@@ -5,7 +5,7 @@ import dagger.Component
 import ladyaev.development.myFirstFinance.core.di.AppComponent
 import ladyaev.development.myFirstFinance.core.di.FeatureScope
 
-@Component(dependencies = [AppComponent::class], modules = [ViewModuleModule::class, MiscModule::class])
+@Component(dependencies = [AppComponent::class], modules = [ViewModuleModule::class, BusinessModule::class])
 @FeatureScope
 interface SetupUserComponent {
 

@@ -29,7 +29,7 @@ fun SplashScreen(
     viewModel: SplashScreenViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
     FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime)
+        viewModel.initialize(firstTime, Unit)
     }
 
     SingleLiveEffect(transmission = viewModel.effect) {

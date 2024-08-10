@@ -3,19 +3,22 @@ package ladyaev.development.myFirstFinance.feature.setupUser.presentation.birthD
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ladyaev.development.myFirstFinance.core.common.utils.Age
 import ladyaev.development.myFirstFinance.core.common.utils.CurrentDate
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
+import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.extensions.to2day2month4yearFormat
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.resources.R
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyBirthDateUseCase
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
+import ladyaev.development.myfirstfinance.domain.operation.StandardError
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.specifyBirthDate.SpecifyBirthDateError
 import java.util.Date
 import javax.inject.Inject
 
@@ -23,23 +26,17 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
     private val handleError: HandleError,
     private val manageResources: ManageResources,
     private val currentDate: CurrentDate,
-    private val setupUserRepository: SetupUserRepository,
+    private val specifyBirthDateUseCase: SpecifyBirthDateUseCase,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Unit> {
 
     private val viewModelState = ViewModelState()
 
     val state: StateTransmission get() = mutableState.read()
 
     val effect: EffectTransmission get() = mutableEffect.read()
-
-    fun initialize(firstTime: Boolean) {
-        if (firstTime) {
-
-        }
-    }
 
     fun on(event: UserEvent) {
         when (event) {
@@ -56,21 +53,58 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
             }
             UserEvent.NextButtonClick -> {
                 if (viewModelState.actual.nextButtonEnabled) {
-                    if (Age(viewModelState.date ?: Date(), currentDate).years >= 18) {
-                        mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
-                    } else {
-                        viewModelState.dispatch {
-                            errorState = ErrorState(
-                                true,
-                                manageResources.string(R.string.birthDate_error_minorAge)
-                            )
-                        }
-                    }
+                    specifyBirthDate(viewModelState.date ?: Date())
                 }
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {
                     errorState = ErrorState(false)
+                }
+            }
+        }
+    }
+
+    private fun specifyBirthDate(birthDate: Date) {
+        dispatchers.launchBackground(viewModelScope) {
+            viewModelState.dispatch {
+                operationActive = true
+            }
+            val result = specifyBirthDateUseCase.process(birthDate)
+            viewModelState.dispatch {
+                operationActive = false
+            }
+
+            when (result) {
+                is OperationResult.SpecificFailure -> {
+                    when (result.error) {
+                        SpecifyBirthDateError.UserIsMinor -> {
+                            viewModelState.dispatch {
+                                errorState = ErrorState(
+                                    true,
+                                    manageResources.string(R.string.birthDate_error_minorAge)
+                                )
+                            }
+                        }
+                        SpecifyBirthDateError.InvalidData -> {
+                            viewModelState.dispatch {
+                                errorState = ErrorState(
+                                    true,
+                                    handleError.map(StandardError.Unknown(null))
+                                )
+                            }
+                        }
+                    }
+                }
+                is OperationResult.StandardFailure -> {
+                    viewModelState.dispatch {
+                        errorState = ErrorState(
+                            true,
+                            handleError.map(result.error)
+                        )
+                    }
+                }
+                is OperationResult.Success -> {
+                    mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
                 }
             }
         }
@@ -85,7 +119,8 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         val displayedDate: String = "",
         val date: Date? = null,
         val nextButtonEnabled: Boolean = false,
-        val errorState: ErrorState = ErrorState(false)
+        val errorState: ErrorState = ErrorState(false),
+        val progressbarVisible: Boolean = false
     )
 
     sealed class UserEvent {
@@ -99,6 +134,7 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
     private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var date: Date? = null
         var errorState: ErrorState = ErrorState(false)
+        var operationActive: Boolean = false
 
         override fun implementation() = this
 
@@ -106,7 +142,8 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
             displayedDate = date?.to2day2month4yearFormat() ?: "",
             date = date,
             nextButtonEnabled = date != null,
-            errorState = errorState
+            errorState = errorState,
+            progressbarVisible = operationActive
         )
     }
 
@@ -114,12 +151,12 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         handleError: HandleError,
         manageResources: ManageResources,
         currentDate: CurrentDate,
-        setupUserRepository: ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository,
+        specifyBirthDateUseCase: SpecifyBirthDateUseCase,
     ) : BirthDateViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         manageResources,
         currentDate,
-        setupUserRepository,
+        specifyBirthDateUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import ladyaev.development.myFirstFinance.core.common.misc.Length
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
@@ -12,18 +13,17 @@ import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmPinCodeScreenArguments
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
 import javax.inject.Inject
 
 open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
-    private val setupUserRepository: SetupUserRepository,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Length> {
 
     private val viewModelState = ViewModelState()
 
@@ -31,10 +31,10 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
 
     val effect: EffectTransmission get() = mutableEffect.read()
 
-    fun initialize(firstTime: Boolean) {
+    override fun initialize(firstTime: Boolean, data: Length) {
         if (firstTime) {
             viewModelState.dispatch {
-                codeLength = CODE_LENGTH
+                codeLength = data.data
             }
         }
     }
@@ -61,9 +61,10 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
                             if (newCode.length == viewModelState.codeLength) {
                                 dispatchers.launchMain(viewModelScope) {
                                     delay(500)
-                                    mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
-                                        ConfirmPinCodeScreenArguments(viewModelState.code)
-                                    ))))
+                                    mutableEffect.post(
+                                        UiEffect.Navigation(
+                                            NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
+                                                ConfirmPinCodeScreenArguments(viewModelState.code)))))
                                 }
                             }
                         }
@@ -113,16 +114,10 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
 
     class Base @Inject constructor(
         handleError: HandleError,
-        setupUserRepository: ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository,
     ) : CreatePinCodeViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
-        setupUserRepository,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()
     )
-
-    companion object {
-        private const val CODE_LENGTH = 4
-    }
 }

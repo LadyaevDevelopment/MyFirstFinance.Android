@@ -32,7 +32,7 @@ fun ChooseCountryScreen(
     viewModel: ChooseCountryViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
     FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime)
+        viewModel.initialize(firstTime, Unit)
     }
 
     SingleLiveEffect(transmission = viewModel.effect) {

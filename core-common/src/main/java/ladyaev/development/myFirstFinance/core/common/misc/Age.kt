@@ -1,5 +1,6 @@
-package ladyaev.development.myFirstFinance.core.common.utils
+package ladyaev.development.myFirstFinance.core.common.misc
 
+import ladyaev.development.myFirstFinance.core.common.utils.CurrentDate
 import java.util.Calendar
 import java.util.Date
 
@@ -25,11 +26,9 @@ class Age(
             val currentDay = today.get(Calendar.DAY_OF_MONTH)
 
             var age = currentYear - birthYear
-
             if (currentMonth < birthMonth || (currentMonth == birthMonth && currentDay < birthDay)) {
                 age--
             }
-
             return age
         }
     }

@@ -13,12 +13,13 @@ import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButt
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmationCodeScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
-import ladyaev.development.myFirstFinance.feature.setupUser.presentation.misc.FeatureData
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import javax.inject.Inject
 
@@ -30,7 +31,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Country?> {
 
     private val viewModelState = ViewModelState()
 
@@ -38,13 +39,13 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
 
     val effect: EffectTransmission get() = mutableEffect.read()
 
-    fun initialize(firstTime: Boolean, chosenCountry: Country?) {
+    override fun initialize(firstTime: Boolean, data: Country?) {
         if (firstTime) {
             requireInitialData()
         }
-        if (chosenCountry != null) {
+        if (data != null) {
             viewModelState.dispatch {
-                country = chosenCountry
+                country = data
             }
         }
     }
@@ -127,8 +128,8 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
                     mutableEffect.post(
                         UiEffect.Navigation(
                             NavigationEvent.Navigate(
-                                screen = Screen.SetupUser.ConfirmationCode(ConfirmationCodeScreenArguments(
-                                    viewModelState.actual.phoneNumber.toUiModel())))))
+                                screen = Screen.SetupUser.ConfirmationCode(
+                                    ConfirmationCodeScreenArguments(viewModelState.actual.phoneNumber.toUiModel())))))
                 }
             }
             UserEvent.ClearPhoneNumberBtnClick -> {
@@ -167,7 +168,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     }
 
     inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
-        var country: ladyaev.development.myfirstfinance.domain.entities.Country? = null
+        var country: Country? = null
         var loadingData: Boolean = false
         var phoneNumberValidationResult = PhoneNumberValidation.TestResult(PhoneNumber(), false)
         var errorState: ErrorState = ErrorState(false)

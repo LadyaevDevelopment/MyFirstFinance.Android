@@ -6,24 +6,26 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
+import ladyaev.development.myFirstFinance.core.common.misc.Code
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyPinCodeUseCase
 import javax.inject.Inject
 
 open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
-    private val setupUserRepository: SetupUserRepository,
+    private val specifyPinCodeUseCase: SpecifyPinCodeUseCase,
     private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
     private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel() {
+) : ViewModel(), ViewModelContract<Code> {
 
     private val viewModelState = ViewModelState()
 
@@ -31,10 +33,10 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
 
     val effect: EffectTransmission get() = mutableEffect.read()
 
-    fun initialize(firstTime: Boolean, code: String) {
+    override fun initialize(firstTime: Boolean, data: Code) {
         if (firstTime) {
             viewModelState.dispatch {
-                codeToConfirm = code
+                codeToConfirm = data.data
             }
         }
     }
@@ -98,7 +100,8 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
 
     data class UiState(
         val codeMarkers: List<DotMarkerState> = listOf(),
-        val errorState: ErrorState = ErrorState(false)
+        val errorState: ErrorState = ErrorState(false),
+        val progressbarVisible: Boolean = false
     )
 
     sealed class UserEvent {
@@ -112,12 +115,14 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         var codeToConfirm: String = ""
         val codeLength get() = codeToConfirm.length
         var errorState: ErrorState = ErrorState(false)
+        var operationActive: Boolean = false
 
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
             codeMarkers = PinCodeMarkersStrategy().resolved,
-            errorState = errorState
+            errorState = errorState,
+            progressbarVisible = operationActive
         )
 
         private inner class PinCodeMarkersStrategy : Strategy<List<DotMarkerState>> {
@@ -137,10 +142,10 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
 
     class Base @Inject constructor(
         handleError: HandleError,
-        setupUserRepository: ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository,
+        specifyPinCodeUseCase: SpecifyPinCodeUseCase,
     ) : ConfirmPinCodeViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
-        setupUserRepository,
+        specifyPinCodeUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

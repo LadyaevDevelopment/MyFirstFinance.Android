@@ -54,9 +54,6 @@ fun ConfirmationCodeScreen(
             is ConfirmationCodeViewModel.UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is ConfirmationCodeViewModel.UiEffect.ShowErrorMessage -> {
-
-            }
         }
     }
 

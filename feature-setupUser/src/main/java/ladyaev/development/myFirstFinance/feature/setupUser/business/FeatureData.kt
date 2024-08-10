@@ -1,4 +1,4 @@
-package ladyaev.development.myFirstFinance.feature.setupUser.presentation.misc
+package ladyaev.development.myFirstFinance.feature.setupUser.business
 
 import ladyaev.development.myfirstfinance.domain.entities.Country
 
