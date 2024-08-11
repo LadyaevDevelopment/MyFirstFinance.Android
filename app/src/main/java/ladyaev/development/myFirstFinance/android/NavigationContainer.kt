@@ -56,10 +56,16 @@ fun NavigationContainer(application: MainApplication) {
                         inclusive = navigationEvent.inclusive
                     )
                     navController.navigate(navigationEvent.screenToShow.routeName)
+                    if (navigationEvent.screenToShow.arguments != null) {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(ARGUMENT_KEY, navigationEvent.screenToShow.arguments)
+                    }
                 }
                 is NavigationEvent.ReplaceLast -> {
                     navController.popBackStack()
                     navController.navigate(navigationEvent.screen.routeName)
+                    if (navigationEvent.screen.arguments != null) {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(ARGUMENT_KEY, navigationEvent.screen.arguments)
+                    }
                 }
             }
             Unit

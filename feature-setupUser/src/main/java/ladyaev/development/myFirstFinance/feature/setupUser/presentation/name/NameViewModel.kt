@@ -8,11 +8,12 @@ import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyNameUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
@@ -21,6 +22,7 @@ import javax.inject.Inject
 open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyNameUseCase: SpecifyNameUseCase,
+    private val requireChosenCountryUseCase: RequireChosenCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -102,7 +104,11 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 is OperationResult.Success -> {
                     dispatchers.launchMain(viewModelScope) {
                         doOnHideKeyboard {
-                            dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Email())))
+                            val chosenCountry = (requireChosenCountryUseCase.process() as? OperationResult.Success)?.data
+                            dispatchEffectSafely(
+                                UiEffect.Navigation(
+                                    NavigationEvent.Navigate(
+                                        UserStatusToScreen(chosenCountry).map(result.data.userStatus))))
                         }
                     }
                 }
@@ -150,9 +156,11 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
     class Base @Inject constructor(
         handleError: HandleError,
         specifyNameUseCase: SpecifyNameUseCase,
+        requireChosenCountryUseCase: RequireChosenCountryUseCase
     ) : NameViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         specifyNameUseCase,
+        requireChosenCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

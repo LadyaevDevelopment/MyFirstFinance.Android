@@ -7,11 +7,12 @@ import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyResidenceAddressUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import ladyaev.development.myfirstfinance.domain.entities.ResidenceAddress
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
@@ -22,6 +23,7 @@ import javax.inject.Inject
 open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyResidenceAddressUseCase: SpecifyResidenceAddressUseCase,
+    private val requireChosenCountryUseCase: RequireChosenCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -118,7 +120,11 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
                 is OperationResult.Success -> {
                     dispatchers.launchMain(viewModelScope) {
                         doOnHideKeyboard {
-                            dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.CreatePinCode())))
+                            val chosenCountry = (requireChosenCountryUseCase.process() as? OperationResult.Success)?.data
+                            dispatchEffectSafely(
+                                UiEffect.Navigation(
+                                    NavigationEvent.Navigate(
+                                        UserStatusToScreen(chosenCountry).map(result.data.userStatus))))
                         }
                     }
                 }
@@ -173,9 +179,11 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
     class Base @Inject constructor(
         handleError: HandleError,
         specifyResidenceAddressUseCase: SpecifyResidenceAddressUseCase,
+        requireChosenCountryUseCase: RequireChosenCountryUseCase
     ) : ResidenceAddressViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         specifyResidenceAddressUseCase,
+        requireChosenCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

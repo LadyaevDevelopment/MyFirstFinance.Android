@@ -8,14 +8,12 @@ import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
-import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
-import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyEmailUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
@@ -24,7 +22,7 @@ import javax.inject.Inject
 open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyEmailUseCase: SpecifyEmailUseCase,
-    private val featureData: FeatureData,
+    private val requireChosenCountryUseCase: RequireChosenCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -108,11 +106,11 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 }
                 is OperationResult.Success -> {
                     doOnHideKeyboard {
+                        val chosenCountry = (requireChosenCountryUseCase.process() as? OperationResult.Success)?.data
                         dispatchEffectSafely(
                             UiEffect.Navigation(
                                 NavigationEvent.Navigate(
-                                    Screen.SetupUser.ResidenceAddress(
-                                        ResidenceAddressScreenArguments(chosenCountry = featureData.country?.toUiModel()))))
+                                    UserStatusToScreen(chosenCountry).map(result.data.userStatus)))
                         )
                     }
                 }
@@ -157,11 +155,11 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     class Base @Inject constructor(
         handleError: HandleError,
         specifyEmailUseCase: SpecifyEmailUseCase,
-        featureData: FeatureData
+        requireChosenCountryUseCase: RequireChosenCountryUseCase
     ) : EmailViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         specifyEmailUseCase,
-        featureData,
+        requireChosenCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

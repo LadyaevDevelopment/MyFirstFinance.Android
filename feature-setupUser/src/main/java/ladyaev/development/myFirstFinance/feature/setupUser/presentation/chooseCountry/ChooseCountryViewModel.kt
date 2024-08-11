@@ -13,14 +13,12 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
-import ladyaev.development.myFirstFinance.feature.setupUser.business.ChooseCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireCountriesUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import javax.inject.Inject
 
 open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val requireCountriesUseCase: RequireCountriesUseCase,
-    private val chooseCountryUseCase: ChooseCountryUseCase,
     private val handleError: HandleError,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
@@ -78,7 +76,6 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
-                chooseCountryUseCase.process(viewModelState.chosenCountry)
                 dispatchEffectSafely(
                     UiEffect.Navigation(
                         NavigationEvent.PopTo(
@@ -134,11 +131,9 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
 
     class Base @Inject constructor(
         requireCountriesUseCase: RequireCountriesUseCase,
-        chooseCountryUseCase: ChooseCountryUseCase,
         handleError: HandleError
     ) : ChooseCountryViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         requireCountriesUseCase,
-        chooseCountryUseCase,
         handleError,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),

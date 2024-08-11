@@ -18,7 +18,7 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
-import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
+import ladyaev.development.myFirstFinance.feature.setupUser.business.ChooseCountryUseCase
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import javax.inject.Inject
@@ -26,8 +26,8 @@ import javax.inject.Inject
 abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val countryCache: CountryCache,
     private val handleError: HandleError,
-    private val featureData: FeatureData,
     private val phoneNumberValidation: PhoneNumberValidation,
+    private val chooseCountryUseCase: ChooseCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -127,7 +127,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
             }
             UserEvent.NextButtonClick -> {
                 if (viewModelState.actual.nextButtonEnabled) {
-                    featureData.country = viewModelState.country
+                    chooseCountryUseCase.process(viewModelState.country)
                     dispatchEffectSafely(
                         UiEffect.Navigation(
                             NavigationEvent.Navigate(
@@ -203,13 +203,13 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     class Base @Inject constructor(
         countryCache: CountryCache,
         handleError: HandleError,
-        featureData: FeatureData,
-        phoneNumberValidation: PhoneNumberValidation
+        phoneNumberValidation: PhoneNumberValidation,
+        chooseCountryUseCase: ChooseCountryUseCase,
     ) : PhoneNumberViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         countryCache,
         handleError,
-        featureData,
         phoneNumberValidation,
+        chooseCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

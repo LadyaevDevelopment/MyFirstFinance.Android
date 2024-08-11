@@ -16,7 +16,9 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyPinCodeUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
@@ -25,6 +27,7 @@ import javax.inject.Inject
 open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyPinCodeUseCase: SpecifyPinCodeUseCase,
+    private val requireChosenCountryUseCase: RequireChosenCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -116,13 +119,14 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
                     }
                 }
                 is OperationResult.Success -> {
+                    val chosenCountry = (requireChosenCountryUseCase.process() as? OperationResult.Success)?.data
                     dispatchEffectSafely(
                         Milliseconds(500),
                         UiEffect.Navigation(
                             NavigationEvent.PopAndNavigate(
                                 popToScreen = Screen.SetupUser.PhoneNumber(null),
                                 inclusive = true,
-                                screenToShow = Screen.SetupUser.CompleteRegistration()))
+                                screenToShow = UserStatusToScreen(chosenCountry).map(result.data.userStatus)))
                     )
                 }
             }
@@ -174,9 +178,11 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
     class Base @Inject constructor(
         handleError: HandleError,
         specifyPinCodeUseCase: SpecifyPinCodeUseCase,
+        requireChosenCountryUseCase: RequireChosenCountryUseCase
     ) : ConfirmPinCodeViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         specifyPinCodeUseCase,
+        requireChosenCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()

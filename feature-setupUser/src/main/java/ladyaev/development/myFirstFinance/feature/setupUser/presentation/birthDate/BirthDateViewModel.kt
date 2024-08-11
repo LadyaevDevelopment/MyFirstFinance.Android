@@ -11,11 +11,12 @@ import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.extensions.to2day2month4yearFormat
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyBirthDateUseCase
+import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.specifyBirthDate.SpecifyBirthDateError
@@ -27,6 +28,7 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
     private val manageResources: ManageResources,
     private val currentDate: CurrentDate,
     private val specifyBirthDateUseCase: SpecifyBirthDateUseCase,
+    private val requireChosenCountryUseCase: RequireChosenCountryUseCase,
     dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     mutableState: Transmission.Mutable<StateTransmission, UiState>,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
@@ -103,7 +105,11 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
                     }
                 }
                 is OperationResult.Success -> {
-                    dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
+                    val chosenCountry = (requireChosenCountryUseCase.process() as? OperationResult.Success)?.data
+                    dispatchEffectSafely(
+                        UiEffect.Navigation(
+                            NavigationEvent.Navigate(
+                                UserStatusToScreen(chosenCountry).map(result.data.userStatus))))
                 }
             }
         }
@@ -150,11 +156,13 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         manageResources: ManageResources,
         currentDate: CurrentDate,
         specifyBirthDateUseCase: SpecifyBirthDateUseCase,
+        requireChosenCountryUseCase: RequireChosenCountryUseCase
     ) : BirthDateViewModel<LiveData<UiState>, LiveData<UiEffect>>(
         handleError,
         manageResources,
         currentDate,
         specifyBirthDateUseCase,
+        requireChosenCountryUseCase,
         ManageDispatchers.Base(),
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()
