@@ -10,7 +10,7 @@ class SpecifyResidenceAddressUseCase(
     private val repository: SetupUserRepository
 ) {
     suspend fun process(residenceAddress: ResidenceAddress): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        if (residenceAddress.country.iso2Code.isBlank()) {
+        if (residenceAddress.country.id.data.isBlank()) {
             return OperationResult.SpecificFailure(SpecifyUserInfoError.InvalidData)
         }
         if (residenceAddress.city.isBlank()) {

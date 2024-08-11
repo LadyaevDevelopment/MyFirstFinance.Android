@@ -5,11 +5,11 @@ import java.math.*
 import java.lang.*
 
 class SpecifyPinCodeRequest {
-	var pinCode: String? = null
+	var pinCode: String = ""
 
 	constructor() : super()
 
-	constructor(pinCode: String?) {
+	constructor(pinCode: String) {
 		this.pinCode = pinCode
 	}
 }

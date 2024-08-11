@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
+    implementation(libs.chucker.library)
 
     implementation(libs.dagger)
     kapt(libs.dagger.compiler)
@@ -47,4 +48,5 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":core-common"))
     implementation(project(":core-ui"))
+    implementation(project(":core-api"))
 }

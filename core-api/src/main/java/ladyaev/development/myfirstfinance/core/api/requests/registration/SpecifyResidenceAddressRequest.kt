@@ -5,15 +5,15 @@ import java.math.*
 import java.lang.*
 
 class SpecifyResidenceAddressRequest {
-	var countryId: String? = null
-	var city: String? = null
-	var street: String? = null
-	var buildingNumber: String? = null
-	var apartmentNumber: String? = null
+	var countryId: String = ""
+	var city: String = ""
+	var street: String = ""
+	var buildingNumber: String = ""
+	var apartmentNumber: String = ""
 
 	constructor() : super()
 
-	constructor(countryId: String?, city: String?, street: String?, buildingNumber: String?, apartmentNumber: String?) {
+	constructor(countryId: String, city: String, street: String, buildingNumber: String, apartmentNumber: String) {
 		this.countryId = countryId
 		this.city = city
 		this.street = street

@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ladyaev.development.myFirstFinance.core.ui.extensions.applyIf
+import ladyaev.development.myFirstFinance.core.common.extensions.applyIf
 import ladyaev.development.myFirstFinance.core.ui.extensions.noRippleClickable
 
 @Composable
@@ -42,10 +42,10 @@ fun CustomScaffold(
             horizontalAlignment = horizontalAlignment,
             modifier = Modifier
                 .applyIf(useContentHorizontalPadding) {
-                    padding(top = 8.dp, bottom = 16.dp, start = 24.dp, end = 24.dp)
+                    padding(top = 8.dp, bottom = 16.dp, start = 24.dp, end = 24.dp) as Modifier.Companion
                 }
                 .applyIf(!useContentHorizontalPadding) {
-                    padding(top = 8.dp, bottom = 16.dp)
+                    padding(top = 8.dp, bottom = 16.dp) as Modifier.Companion
                 }
                 .fillMaxSize()
                 .applyIf(contentScrollable) {

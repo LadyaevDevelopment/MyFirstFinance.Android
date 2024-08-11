@@ -1,6 +1,7 @@
 package ladyaev.development.myfirstfinance.data.mock
 
 import kotlinx.coroutines.delay
+import ladyaev.development.myFirstFinance.core.common.misc.Id
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import ladyaev.development.myfirstfinance.domain.entities.PolicyDocument
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
@@ -40,7 +41,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                 listOf(
                     Country(
                         "United Arab Emirates",
-                        "AE",
+                        Id("1"),
                         "+971",
                         "https://i.pinimg.com/originals/f5/ea/7f/f5ea7fb6ae1a02b5c6fd01a52e90f525.png",
                         listOf(
@@ -50,7 +51,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Andorra",
-                        "AD",
+                        Id("2"),
                         "+971",
                         "https://avatars.mds.yandex.net/i?id=8a0209f2c66031786bc673915b0086918a91177a5fe1d3d9-5488408-images-thumbs&n=13",
                         listOf(
@@ -59,7 +60,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania",
-                        "AB",
+                        Id("3"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -68,7 +69,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania2",
-                        "AB",
+                        Id("4"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -77,7 +78,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania3",
-                        "AB",
+                        Id("5"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -86,7 +87,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania4",
-                        "AB",
+                        Id("6"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -95,7 +96,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania5",
-                        "AB",
+                        Id("7"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -104,7 +105,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania6",
-                        "AB",
+                        Id("8"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -113,7 +114,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania7",
-                        "AB",
+                        Id("9"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -122,7 +123,7 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania8",
-                        "AB",
+                        Id("10"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
@@ -131,15 +132,14 @@ class MiscRepositoryMock @Inject constructor() : MiscRepository {
                     ),
                     Country(
                         "Albania9",
-                        "AB",
+                        Id("11"),
                         "+971",
                         "https://fikiwiki.com/uploads/posts/2022-02/1644975879_8-fikiwiki-com-p-kartinki-flag-albanii-8.jpg",
                         listOf(
                             "(###)###-####"
                         )
                     ),
-
-                    )
+                )
             )
         )
     }

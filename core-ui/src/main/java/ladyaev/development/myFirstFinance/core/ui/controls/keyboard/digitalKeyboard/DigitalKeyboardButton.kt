@@ -14,8 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ladyaev.development.myFirstFinance.core.common.extensions.applyIf
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
-import ladyaev.development.myFirstFinance.core.ui.extensions.applyIf
 import ladyaev.development.myFirstFinance.core.ui.theme.AppColors
 
 @Composable

@@ -5,12 +5,12 @@ import java.math.*
 import java.lang.*
 
 class VerifyConfirmationCodeRequest {
-	var confirmationCodeId: String? = null
+	var confirmationCodeId: String = ""
 	var confirmationCode: String = ""
 
 	constructor() : super()
 
-	constructor(confirmationCodeId: String?, confirmationCode: String) {
+	constructor(confirmationCodeId: String, confirmationCode: String) {
 		this.confirmationCodeId = confirmationCodeId
 		this.confirmationCode = confirmationCode
 	}

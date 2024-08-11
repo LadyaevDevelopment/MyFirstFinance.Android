@@ -16,9 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import ladyaev.development.myFirstFinance.core.ui.extensions.applyIf
+import ladyaev.development.myFirstFinance.core.common.extensions.applyIf
 
 @Composable
 fun AnimatedVisibilityContainer(

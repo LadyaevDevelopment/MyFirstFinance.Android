@@ -5,6 +5,7 @@ import dagger.Module
 import ladyaev.development.myfirstfinance.data.mock.MiscRepositoryMock
 import ladyaev.development.myfirstfinance.data.mock.SetupUserRepositoryMock
 import ladyaev.development.myfirstfinance.domain.repositories.misc.MiscRepository
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
 import javax.inject.Singleton
 
 @Module
@@ -15,5 +16,5 @@ interface RepositoryModule {
 
     @Binds
     @Singleton
-    fun setupUserRepository(repository: SetupUserRepositoryMock): ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
+    fun setupUserRepository(repository: SetupUserRepositoryMock): SetupUserRepository
 }

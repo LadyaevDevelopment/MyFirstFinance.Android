@@ -32,7 +32,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import ladyaev.development.myFirstFinance.core.ui.extensions.applyIf
+import ladyaev.development.myFirstFinance.core.common.extensions.applyIf
 import ladyaev.development.myFirstFinance.core.ui.theme.AppColors
 
 @Composable

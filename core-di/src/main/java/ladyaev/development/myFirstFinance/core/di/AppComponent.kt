@@ -17,7 +17,8 @@ import javax.inject.Singleton
     RepositoryModule::class,
     MiscProvidesModule::class,
     PhoneNumberValidationModule::class,
-    MiscBindsModule::class
+    MiscBindsModule::class,
+    ApiClientModule::class
 ])
 interface AppComponent {
 

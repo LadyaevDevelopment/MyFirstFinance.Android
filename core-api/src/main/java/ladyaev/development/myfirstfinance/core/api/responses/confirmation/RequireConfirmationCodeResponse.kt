@@ -5,7 +5,7 @@ import java.math.*
 import java.lang.*
 
 class RequireConfirmationCodeResponse {
-	var confirmationCodeId: String? = null
+	var confirmationCodeId: String = ""
 	var confirmationCodeLength: Int = 0
 	var resendTimeInSeconds: Int = 0
 	var allowedCodeConfirmationAttemptCount: Int = 0
@@ -13,7 +13,7 @@ class RequireConfirmationCodeResponse {
 
 	constructor() : super()
 
-	constructor(confirmationCodeId: String?, confirmationCodeLength: Int, resendTimeInSeconds: Int, allowedCodeConfirmationAttemptCount: Int, confirmationCodeLifeTimeInSeconds: Int) {
+	constructor(confirmationCodeId: String, confirmationCodeLength: Int, resendTimeInSeconds: Int, allowedCodeConfirmationAttemptCount: Int, confirmationCodeLifeTimeInSeconds: Int) {
 		this.confirmationCodeId = confirmationCodeId
 		this.confirmationCodeLength = confirmationCodeLength
 		this.resendTimeInSeconds = resendTimeInSeconds

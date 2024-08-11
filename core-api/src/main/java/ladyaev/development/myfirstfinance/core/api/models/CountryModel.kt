@@ -5,7 +5,7 @@ import java.math.*
 import java.lang.*
 
 class CountryModel {
-	var id: String? = null
+	var id: String = ""
 	var name: String = ""
 	var phoneNumberCode: String = ""
 	var flagImageUrl: String = ""
@@ -13,7 +13,7 @@ class CountryModel {
 
 	constructor() : super()
 
-	constructor(id: String?, name: String, phoneNumberCode: String, flagImageUrl: String, phoneNumberMasks: List<String>) {
+	constructor(id: String, name: String, phoneNumberCode: String, flagImageUrl: String, phoneNumberMasks: List<String>) {
 		this.id = id
 		this.name = name
 		this.phoneNumberCode = phoneNumberCode
