@@ -17,6 +17,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -33,6 +34,7 @@ import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppColors
 import ladyaev.development.myFirstFinance.core.ui.theme.AppTheme
@@ -47,13 +49,14 @@ fun StartMenuScreen(
         viewModel.initialize(firstTime, Unit)
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is StartMenuViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is StartMenuViewModel.UiEffect.ShowErrorMessage -> {
-
+            UiEffect.HideKeyboard -> {
+                focusManager.clearFocus(true)
             }
         }
     }

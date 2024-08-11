@@ -24,8 +24,10 @@ import ladyaev.development.myFirstFinance.core.ui.controls.input.CustomTextField
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.AnimatedTitleToolbar
+import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppTheme
 
@@ -35,21 +37,17 @@ fun NameScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: NameViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    val focusManager = LocalFocusManager.current
-
     FirstTimeSideEffect { firstTime ->
         viewModel.initialize(firstTime, Unit)
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is NameViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is NameViewModel.UiEffect.ShowErrorMessage -> {
-
-            }
-            NameViewModel.UiEffect.HideKeyboard -> {
+            UiEffect.HideKeyboard -> {
                 focusManager.clearFocus(true)
             }
         }
@@ -128,8 +126,13 @@ fun NameScreen(
                 },
                 text = stringResource(id = R.string.next),
                 buttonColors = AppTheme.buttonTheme.primary,
-                enabled = state.nextButtonEnabled
+                enabled = state.nextButtonEnabled,
+                progressbarVisible = state.progressbarVisible
             )
         }
     )
+
+    DefaultErrorDialog(state = state.errorState) {
+        viewModel.on(NameViewModel.UserEvent.ErrorDialogDismiss)
+    }
 }

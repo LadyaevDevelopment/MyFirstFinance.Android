@@ -20,6 +20,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.Toolbar
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.PhoneNumberScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toEntity
@@ -55,13 +57,14 @@ fun PhoneNumberScreen(
         viewModel.initialize(firstTime, arguments.chosenCountry?.toEntity())
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is PhoneNumberViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is PhoneNumberViewModel.UiEffect.ShowErrorMessage -> {
-
+            UiEffect.HideKeyboard -> {
+                focusManager.clearFocus(true)
             }
         }
     }

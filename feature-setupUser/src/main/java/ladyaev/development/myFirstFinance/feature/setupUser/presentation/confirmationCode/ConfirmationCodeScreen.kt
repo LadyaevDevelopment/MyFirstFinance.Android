@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -33,6 +34,7 @@ import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
 import ladyaev.development.myFirstFinance.core.ui.dialogs.InDevelopmentDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmationCodeScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toEntity
@@ -49,10 +51,14 @@ fun ConfirmationCodeScreen(
         viewModel.initialize(firstTime, arguments.phoneNumber.toEntity())
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is ConfirmationCodeViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
+            }
+            UiEffect.HideKeyboard -> {
+                focusManager.clearFocus(true)
             }
         }
     }

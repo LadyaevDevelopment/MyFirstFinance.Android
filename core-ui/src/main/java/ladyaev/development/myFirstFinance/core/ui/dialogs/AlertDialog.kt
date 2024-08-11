@@ -48,6 +48,7 @@ fun AlertDialog(
             Surface(
                 shape = RoundedCornerShape(24.dp),
                 tonalElevation = 24.dp,
+                shadowElevation = 4.dp,
                 color = Color.White,
                 modifier = Modifier.fillMaxWidth(0.9f)
             ) {

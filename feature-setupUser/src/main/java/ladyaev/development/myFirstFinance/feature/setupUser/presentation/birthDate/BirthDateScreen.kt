@@ -7,9 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,14 +16,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.button.ActionButton
-import ladyaev.development.myFirstFinance.core.ui.controls.datePicker.datePickerDialog
+import ladyaev.development.myFirstFinance.core.ui.controls.datePicker.DatePickerDialog
 import ladyaev.development.myFirstFinance.core.ui.controls.input.CustomTextField
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.Toolbar
+import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
-import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppTheme
 
@@ -36,24 +36,18 @@ fun BirthDateScreen(
 ) {
     val state by viewModel.state.observeAsState(BirthDateViewModel.UiState())
 
-    val context = LocalContext.current
-    val datePickerDialog = remember {
-        datePickerDialog(context, state.date) {
-            viewModel.on(BirthDateViewModel.UserEvent.DateChanged(it))
-        }
-    }
-
     FirstTimeSideEffect { firstTime ->
         viewModel.initialize(firstTime, Unit)
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is BirthDateViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            BirthDateViewModel.UiEffect.ShowDatePickerDialog -> {
-                datePickerDialog.show()
+            UiEffect.HideKeyboard -> {
+                focusManager.clearFocus(true)
             }
         }
     }
@@ -91,8 +85,20 @@ fun BirthDateScreen(
                 },
                 text = stringResource(id = R.string.next),
                 buttonColors = AppTheme.buttonTheme.primary,
-                enabled = state.nextButtonEnabled
+                enabled = state.nextButtonEnabled,
+                progressbarVisible = state.progressbarVisible
             )
+        }
+    )
+
+    DatePickerDialog(
+        visible = state.datePickerDialogVisible,
+        initialDate = state.date,
+        dateChanged = { date ->
+            viewModel.on(BirthDateViewModel.UserEvent.DateChanged(date))
+        },
+        onDismiss = {
+            viewModel.on(BirthDateViewModel.UserEvent.DatePickerDialogDismiss)
         }
     )
 

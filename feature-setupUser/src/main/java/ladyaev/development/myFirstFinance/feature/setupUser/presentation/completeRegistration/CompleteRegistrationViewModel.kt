@@ -3,6 +3,7 @@ package ladyaev.development.myFirstFinance.feature.setupUser.presentation.comple
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
@@ -26,10 +27,6 @@ abstract class CompleteRegistrationViewModel<EffectTransmission : Any>(
                 )
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
     sealed class UserEvent {

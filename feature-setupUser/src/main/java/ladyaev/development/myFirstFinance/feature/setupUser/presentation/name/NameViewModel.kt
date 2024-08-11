@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.misc.Name
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -51,7 +52,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 }
             }
             UserEvent.NextButtonClick -> {
-                if (viewModelState.actual.nextButtonEnabled) {
+                if (viewModelState.actual.nextButtonEnabled && !viewModelState.operationActive) {
                     specifyName()
                 }
             }
@@ -69,7 +70,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
     }
 
     private fun specifyName() {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
@@ -77,7 +78,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 Name(
                     lastName = viewModelState.lastName,
                     firstName = viewModelState.firstName,
-                    middleName = viewModelState.middleName
+                    middleName = viewModelState.middleName.ifBlank { null }
                 )
             )
             viewModelState.dispatch {
@@ -89,25 +90,21 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
                     when (result.error) {
                         SpecifyUserInfoError.InvalidData -> {
                             viewModelState.dispatch {
-                                errorState = ErrorState(
-                                    true,
-                                    handleError.map(StandardError.Unknown(null))
-                                )
+                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
                             }
                         }
                     }
                 }
                 is OperationResult.StandardFailure -> {
                     viewModelState.dispatch {
-                        errorState = ErrorState(
-                            true,
-                            handleError.map(result.error)
-                        )
+                        errorState = ErrorState(true, handleError.map(result.error))
                     }
                 }
                 is OperationResult.Success -> {
-                    doOnHideKeyboard {
-                        mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Email())))
+                    dispatchers.launchMain(viewModelScope) {
+                        doOnHideKeyboard {
+                            mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Email())))
+                        }
                     }
                 }
             }
@@ -120,12 +117,6 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
             delay(300)
             block()
         }
-    }
-
-    sealed class UiEffect {
-        data class ShowErrorMessage(val message: String) : UiEffect()
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
-        data object HideKeyboard : UiEffect()
     }
 
     data class UiState(

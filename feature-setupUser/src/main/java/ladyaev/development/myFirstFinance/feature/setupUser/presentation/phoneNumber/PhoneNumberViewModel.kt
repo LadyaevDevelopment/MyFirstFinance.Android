@@ -10,6 +10,7 @@ import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidatio
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.di.CountryCache
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
@@ -51,7 +52,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     }
 
     private fun requireInitialData() {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 loadingData = true
             }
@@ -61,7 +62,9 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
             }
             when (result) {
                 is OperationResult.StandardFailure -> {
-                    mutableEffect.post(UiEffect.ShowErrorMessage(handleError.map(result.error)))
+                    viewModelState.dispatch {
+                        errorState = ErrorState(true, handleError.map(result.error))
+                    }
                 }
                 is OperationResult.SpecificFailure -> {}
                 is OperationResult.Success -> {
@@ -143,11 +146,6 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
                 }
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class ShowErrorMessage(val message: String) : UiEffect()
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
     data class UiState(

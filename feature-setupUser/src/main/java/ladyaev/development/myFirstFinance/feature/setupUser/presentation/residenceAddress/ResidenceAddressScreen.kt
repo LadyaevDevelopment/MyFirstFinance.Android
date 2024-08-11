@@ -31,6 +31,7 @@ import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.AnimatedTitle
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toEntity
@@ -43,21 +44,17 @@ fun ResidenceAddressScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: ResidenceAddressViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    val focusManager = LocalFocusManager.current
-
     FirstTimeSideEffect { firstTime ->
         viewModel.initialize(firstTime, arguments.chosenCountry?.toEntity())
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is ResidenceAddressViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is ResidenceAddressViewModel.UiEffect.ShowErrorMessage -> {
-
-            }
-            ResidenceAddressViewModel.UiEffect.HideKeyboard -> {
+            UiEffect.HideKeyboard -> {
                 focusManager.clearFocus(true)
             }
         }
@@ -163,7 +160,8 @@ fun ResidenceAddressScreen(
                 },
                 text = stringResource(id = R.string.next),
                 buttonColors = AppTheme.buttonTheme.primary,
-                enabled = state.nextButtonEnabled
+                enabled = state.nextButtonEnabled,
+                progressbarVisible = state.progressbarVisible
             )
         }
     )

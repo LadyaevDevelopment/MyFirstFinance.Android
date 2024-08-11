@@ -20,6 +20,7 @@ import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellData
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellState
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -75,7 +76,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         if (viewModelState.requireCodeOperationActive || !viewModelState.actual.requireCodeBtnEnabled) {
             return
         }
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
@@ -86,10 +87,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             when (result) {
                 is OperationResult.StandardFailure -> {
                     viewModelState.dispatch {
-                        errorState = ErrorState(
-                            true,
-                            handleError.map(result.error)
-                        )
+                        errorState = ErrorState(true, handleError.map(result.error))
                     }
                 }
                 is OperationResult.SpecificFailure -> {
@@ -108,10 +106,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                         }
                         RequireConfirmationCodeError.InvalidData -> {
                             viewModelState.dispatch {
-                                errorState = ErrorState(
-                                    true,
-                                    handleError.map(StandardError.Unknown(null))
-                                )
+                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
                             }
                         }
                     }
@@ -130,7 +125,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
     }
 
     private fun verifyConfirmationCode(codeId: Id, code: Code) {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
@@ -144,10 +139,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             when (result) {
                 is OperationResult.StandardFailure -> {
                     viewModelState.dispatch {
-                        errorState = ErrorState(
-                            true,
-                            handleError.map(result.error)
-                        )
+                        errorState = ErrorState(true, handleError.map(result.error))
                     }
                 }
                 is OperationResult.SpecificFailure -> {
@@ -238,10 +230,6 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 }
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
     data class UiState(

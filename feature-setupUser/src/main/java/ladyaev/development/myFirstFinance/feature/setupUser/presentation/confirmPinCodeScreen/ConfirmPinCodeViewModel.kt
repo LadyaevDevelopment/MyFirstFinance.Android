@@ -4,19 +4,23 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
-import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.Code
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyPinCodeUseCase
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
+import ladyaev.development.myfirstfinance.domain.operation.StandardError
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
 import javax.inject.Inject
 
 open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
@@ -61,15 +65,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
                                 enteredCode = newCode
                             }
                             if (newCode.length == viewModelState.codeLength) {
-                                dispatchers.launchMain(viewModelScope) {
-                                    delay(500)
-                                    mutableEffect.post(
-                                        UiEffect.Navigation(
-                                            NavigationEvent.PopAndNavigate(
-                                                popToScreen = Screen.SetupUser.PhoneNumber(null),
-                                                inclusive = true,
-                                                screenToShow = Screen.SetupUser.CompleteRegistration())))
-                                }
+                                specifyPinCode()
                             }
                         }
                     }
@@ -94,8 +90,44 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         }
     }
 
-    sealed class UiEffect {
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
+    private fun specifyPinCode() {
+        dispatchers.launchIO(viewModelScope) {
+            viewModelState.dispatch {
+                operationActive = true
+            }
+            val result = specifyPinCodeUseCase.process(Code(viewModelState.codeToConfirm))
+            viewModelState.dispatch {
+                operationActive = false
+            }
+
+            when (result) {
+                is OperationResult.SpecificFailure -> {
+                    when (result.error) {
+                        SpecifyUserInfoError.InvalidData -> {
+                            viewModelState.dispatch {
+                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
+                            }
+                        }
+                    }
+                }
+                is OperationResult.StandardFailure -> {
+                    viewModelState.dispatch {
+                        errorState = ErrorState(true, handleError.map(result.error))
+                    }
+                }
+                is OperationResult.Success -> {
+                    dispatchers.launchMain(viewModelScope) {
+                        delay(500)
+                        mutableEffect.post(
+                            UiEffect.Navigation(
+                                NavigationEvent.PopAndNavigate(
+                                    popToScreen = Screen.SetupUser.PhoneNumber(null),
+                                    inclusive = true,
+                                    screenToShow = Screen.SetupUser.CompleteRegistration())))
+                    }
+                }
+            }
+        }
     }
 
     data class UiState(

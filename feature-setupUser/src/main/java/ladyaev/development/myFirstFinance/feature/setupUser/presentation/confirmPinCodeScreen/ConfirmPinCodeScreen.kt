@@ -1,7 +1,9 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.confirmPinCodeScreen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -9,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,13 +23,14 @@ import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.pinCodeKeyboard.PinCodeKeyboard
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.PinCodeProgressView
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
-import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.Toolbar
+import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
-import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmPinCodeScreenArguments
+import ladyaev.development.myFirstFinance.core.ui.theme.AppColors
 
 @Composable
 fun ConfirmPinCodeScreen(
@@ -39,10 +43,14 @@ fun ConfirmPinCodeScreen(
         viewModel.initialize(firstTime, Code(arguments.pinCode))
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is ConfirmPinCodeViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
+            }
+            UiEffect.HideKeyboard -> {
+                focusManager.clearFocus(true)
             }
         }
     }
@@ -72,7 +80,15 @@ fun ConfirmPinCodeScreen(
                 markers = state.codeMarkers
             )
 
-            ExpandedSpacer(minHeight = 16.dp)
+            Spacer(modifier = Modifier.height(16.dp))
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                if (state.progressbarVisible) {
+                    CircularProgressIndicator(color = AppColors.black)
+                }
+            }
 
             PinCodeKeyboard(
                 onKeyTapped = {

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -37,7 +38,7 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
     }
 
     private fun requirePolicyDocuments() {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 loadingDocuments = true
             }
@@ -47,7 +48,9 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
             }
             when (result) {
                 is OperationResult.StandardFailure -> {
-                    mutableEffect.post(UiEffect.ShowErrorMessage(handleError.map(result.error)))
+                    viewModelState.dispatch {
+                        errorState = ErrorState(true, handleError.map(result.error))
+                    }
                 }
                 is OperationResult.SpecificFailure -> {}
                 is OperationResult.Success -> {
@@ -73,11 +76,6 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
                 }
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class ShowErrorMessage(val message: String) : UiEffect()
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
     data class UiState(

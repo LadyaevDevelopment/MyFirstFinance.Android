@@ -8,6 +8,7 @@ import ladyaev.development.myFirstFinance.core.common.misc.Length
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -83,10 +84,6 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
                 mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
     }
 
     data class UiState(

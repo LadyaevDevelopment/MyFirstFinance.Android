@@ -10,6 +10,7 @@ import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
 import ladyaev.development.myfirstfinance.domain.entities.ResidenceAddress
+import ladyaev.development.myfirstfinance.domain.entities.UserStatus
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.common.SpecifyUserInfoResult
@@ -45,22 +46,27 @@ class SetupUserRepositoryMock @Inject constructor() : SetupUserRepository {
     }
 
     override suspend fun specifyBirthDate(birthDate: Date): OperationResult<SpecifyUserInfoResult, SpecifyBirthDateError> {
-        TODO("Not yet implemented")
+        delay(500)
+        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyName, null))
     }
 
     override suspend fun specifyName(name: Name): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        TODO("Not yet implemented")
+        delay(500)
+        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyEmail, null))
     }
 
     override suspend fun specifyEmail(email: Email): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        TODO("Not yet implemented")
+        delay(500)
+        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToCreatePinCode, Length(4)))
     }
 
     override suspend fun specifyPinCode(pinCode: Code): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        TODO("Not yet implemented")
+        delay(500)
+        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyResidenceAddress, null))
     }
 
     override suspend fun specifyResidenceAddress(residenceAddress: ResidenceAddress): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        TODO("Not yet implemented")
+        delay(500)
+        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.Registered, null))
     }
 }

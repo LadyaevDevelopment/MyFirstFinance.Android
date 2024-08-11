@@ -7,6 +7,7 @@ import ladyaev.development.myFirstFinance.core.common.utils.CurrentDate
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
 import ladyaev.development.myFirstFinance.core.resources.R
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.extensions.to2day2month4yearFormat
@@ -49,10 +50,12 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
                 }
             }
             UserEvent.DateInputClick -> {
-                mutableEffect.post(UiEffect.ShowDatePickerDialog)
+                viewModelState.dispatch {
+                    datePickerDialogVisible = true
+                }
             }
             UserEvent.NextButtonClick -> {
-                if (viewModelState.actual.nextButtonEnabled) {
+                if (viewModelState.actual.nextButtonEnabled && !viewModelState.operationActive) {
                     specifyBirthDate(viewModelState.date ?: Date())
                 }
             }
@@ -61,11 +64,16 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
                     errorState = ErrorState(false)
                 }
             }
+            UserEvent.DatePickerDialogDismiss -> {
+                viewModelState.dispatch {
+                    datePickerDialogVisible = false
+                }
+            }
         }
     }
 
     private fun specifyBirthDate(birthDate: Date) {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
@@ -79,40 +87,28 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
                     when (result.error) {
                         SpecifyBirthDateError.UserIsMinor -> {
                             viewModelState.dispatch {
-                                errorState = ErrorState(
-                                    true,
-                                    manageResources.string(R.string.birthDate_error_minorAge)
-                                )
+                                errorState = ErrorState(true, manageResources.string(R.string.birthDate_error_minorAge))
                             }
                         }
                         SpecifyBirthDateError.InvalidData -> {
                             viewModelState.dispatch {
-                                errorState = ErrorState(
-                                    true,
-                                    handleError.map(StandardError.Unknown(null))
-                                )
+                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
                             }
                         }
                     }
                 }
                 is OperationResult.StandardFailure -> {
                     viewModelState.dispatch {
-                        errorState = ErrorState(
-                            true,
-                            handleError.map(result.error)
-                        )
+                        errorState = ErrorState(true, handleError.map(result.error))
                     }
                 }
                 is OperationResult.Success -> {
-                    mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
+                    dispatchers.launchMain(viewModelScope) {
+                        mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
+                    }
                 }
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
-        data object ShowDatePickerDialog : UiEffect()
     }
 
     data class UiState(
@@ -120,7 +116,8 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         val date: Date? = null,
         val nextButtonEnabled: Boolean = false,
         val errorState: ErrorState = ErrorState(false),
-        val progressbarVisible: Boolean = false
+        val progressbarVisible: Boolean = false,
+        val datePickerDialogVisible: Boolean = false,
     )
 
     sealed class UserEvent {
@@ -129,12 +126,14 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         data class DateChanged(val date: Date) : UserEvent()
         data object NextButtonClick : UserEvent()
         data object ErrorDialogDismiss : UserEvent()
+        data object DatePickerDialogDismiss : UserEvent()
     }
 
     private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var date: Date? = null
         var errorState: ErrorState = ErrorState(false)
         var operationActive: Boolean = false
+        var datePickerDialogVisible: Boolean = false
 
         override fun implementation() = this
 
@@ -143,7 +142,8 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
             date = date,
             nextButtonEnabled = date != null,
             errorState = errorState,
-            progressbarVisible = operationActive
+            progressbarVisible = operationActive,
+            datePickerDialogVisible = datePickerDialogVisible
         )
     }
 

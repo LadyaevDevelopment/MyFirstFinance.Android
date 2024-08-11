@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.misc.Email
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -45,7 +46,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 }
             }
             UserEvent.NextButtonClick -> {
-                if (viewModelState.actual.nextButtonEnabled) {
+                if (viewModelState.actual.nextButtonEnabled && !viewModelState.operationActive) {
                     doOnHideKeyboard {
                         viewModelState.dispatch {
                             bottomSheetVisible = true
@@ -90,7 +91,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     }
 
     private fun specifyEmail() {
-        dispatchers.launchBackground(viewModelScope) {
+        dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
@@ -104,20 +105,14 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                     when (result.error) {
                         SpecifyUserInfoError.InvalidData -> {
                             viewModelState.dispatch {
-                                errorState = ErrorState(
-                                    true,
-                                    handleError.map(StandardError.Unknown(null))
-                                )
+                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
                             }
                         }
                     }
                 }
                 is OperationResult.StandardFailure -> {
                     viewModelState.dispatch {
-                        errorState = ErrorState(
-                            true,
-                            handleError.map(result.error)
-                        )
+                        errorState = ErrorState(true, handleError.map(result.error))
                     }
                 }
                 is OperationResult.Success -> {
@@ -133,12 +128,6 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 }
             }
         }
-    }
-
-    sealed class UiEffect {
-        data class ShowErrorMessage(val message: String) : UiEffect()
-        data class Navigation(val navigationEvent: NavigationEvent) : UiEffect()
-        data object HideKeyboard : UiEffect()
     }
 
     data class UiState(

@@ -14,14 +14,14 @@ interface ManageDispatchers {
 
     fun launchMainImmediate(scope: CoroutineScope, block: suspend CoroutineScope.() -> Unit): Job
 
-    fun launchBackground(scope: CoroutineScope, block: suspend CoroutineScope.() -> Unit): Job
+    fun launchIO(scope: CoroutineScope, block: suspend CoroutineScope.() -> Unit): Job
 
     suspend fun switchToMain(block: suspend CoroutineScope. () -> Unit)
 
     abstract class Abstract(
         private val main: CoroutineDispatcher,
         private val mainImmediate: CoroutineDispatcher,
-        private val background: CoroutineDispatcher,
+        private val io: CoroutineDispatcher,
     ) : ManageDispatchers {
 
         override fun launchMain(
@@ -34,10 +34,10 @@ interface ManageDispatchers {
             block: suspend CoroutineScope.() -> Unit
         ): Job = scope.launch(mainImmediate, block = block)
 
-        override fun launchBackground(
+        override fun launchIO(
             scope: CoroutineScope,
             block: suspend CoroutineScope.() -> Unit
-        ): Job = scope.launch(background, block = block)
+        ): Job = scope.launch(io, block = block)
 
         override suspend fun switchToMain(block: suspend CoroutineScope. () -> Unit) = withContext(main, block)
     }

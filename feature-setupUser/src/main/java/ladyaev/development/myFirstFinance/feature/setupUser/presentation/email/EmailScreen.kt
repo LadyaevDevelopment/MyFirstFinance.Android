@@ -26,6 +26,7 @@ import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.Toolbar
 import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppTheme
 
@@ -35,21 +36,17 @@ fun EmailScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: EmailViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    val focusManager = LocalFocusManager.current
-
     FirstTimeSideEffect { firstTime ->
         viewModel.initialize(firstTime, Unit)
     }
 
+    val focusManager = LocalFocusManager.current
     SingleLiveEffect(transmission = viewModel.effect) {
         when (it) {
-            is EmailViewModel.UiEffect.Navigation -> {
+            is UiEffect.Navigation -> {
                 handleNavigationEvent(it.navigationEvent)
             }
-            is EmailViewModel.UiEffect.ShowErrorMessage -> {
-
-            }
-            EmailViewModel.UiEffect.HideKeyboard -> {
+            UiEffect.HideKeyboard -> {
                 focusManager.clearFocus(true)
             }
         }
@@ -90,7 +87,8 @@ fun EmailScreen(
                 },
                 text = stringResource(id = R.string.next),
                 buttonColors = AppTheme.buttonTheme.primary,
-                enabled = state.nextButtonEnabled
+                enabled = state.nextButtonEnabled,
+                progressbarVisible = state.progressbarVisible
             )
         }
     )
