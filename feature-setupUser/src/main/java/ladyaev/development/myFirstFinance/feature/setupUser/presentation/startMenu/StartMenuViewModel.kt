@@ -1,7 +1,6 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.startMenu
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
@@ -10,7 +9,7 @@ import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequirePolicyDocumentsUseCase
 import ladyaev.development.myfirstfinance.domain.entities.PolicyDocument
@@ -20,16 +19,17 @@ import javax.inject.Inject
 abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val requirePolicyDocumentsUseCase: RequirePolicyDocumentsUseCase,
     private val handleError: HandleError,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    StartMenuViewModel.UiState,
+    StartMenuViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Unit>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {
@@ -65,10 +65,10 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
     fun on(event: UserEvent) {
         when (event) {
             UserEvent.LoginBtnClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
             }
             UserEvent.RegisterBtnClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {

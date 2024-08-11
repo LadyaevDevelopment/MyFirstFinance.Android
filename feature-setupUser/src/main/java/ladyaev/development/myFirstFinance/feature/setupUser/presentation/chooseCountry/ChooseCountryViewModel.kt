@@ -1,38 +1,38 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.chooseCountry
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
-import ladyaev.development.myfirstfinance.domain.operation.OperationResult
+import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
-import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.PhoneNumberScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.ChooseCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireCountriesUseCase
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import javax.inject.Inject
 
-open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission : Any>(
+open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val requireCountriesUseCase: RequireCountriesUseCase,
     private val chooseCountryUseCase: ChooseCountryUseCase,
     private val handleError: HandleError,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    ChooseCountryViewModel.UiState,
+    ChooseCountryViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Unit>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {
@@ -79,11 +79,12 @@ open class ChooseCountryViewModel <StateTransmission : Any, EffectTransmission :
             }
             UserEvent.ToolbarBackButtonClick -> {
                 chooseCountryUseCase.process(viewModelState.chosenCountry)
-                mutableEffect.post(
+                dispatchEffectSafely(
                     UiEffect.Navigation(
                         NavigationEvent.PopTo(
                             screen = Screen.SetupUser.PhoneNumber(PhoneNumberScreenArguments(viewModelState.chosenCountry?.toUiModel())),
-                            inclusive = false)))
+                            inclusive = false))
+                )
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {

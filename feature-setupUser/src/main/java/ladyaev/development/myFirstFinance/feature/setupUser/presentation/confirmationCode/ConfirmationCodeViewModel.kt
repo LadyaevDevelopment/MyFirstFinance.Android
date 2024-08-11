@@ -1,20 +1,18 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.confirmationCode
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
-import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
-import ladyaev.development.myfirstfinance.domain.operation.OperationResult
-import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
-import ladyaev.development.myFirstFinance.core.common.misc.Seconds
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.Code
 import ladyaev.development.myFirstFinance.core.common.misc.Id
+import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
+import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
+import ladyaev.development.myFirstFinance.core.common.misc.Seconds
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
 import ladyaev.development.myFirstFinance.core.di.timer
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellData
@@ -25,11 +23,12 @@ import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireConfirmationCodeUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.VerifyConfirmationCodeUseCase
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyConfirmationCode.VerifyConfirmationCodeError
@@ -40,18 +39,19 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
     private val manageResources: ManageResources,
     private val requireConfirmationCodeUseCase: RequireConfirmationCodeUseCase,
     private val verifyConfirmationCodeUseCase: VerifyConfirmationCodeUseCase,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<PhoneNumber> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    ConfirmationCodeViewModel.UiState,
+    ConfirmationCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    PhoneNumber>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
+    override val viewModelState = ViewModelState()
 
     private var timerJob: Job? = null
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
 
     override fun initialize(firstTime: Boolean, data: PhoneNumber) {
         if (firstTime) {
@@ -159,13 +159,12 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                     viewModelState.dispatch {
                         codeInputState = CodeInputState.Success
                     }
-                    dispatchers.launchMain(viewModelScope) {
-                        delay(500)
-                        mutableEffect.post(
-                            UiEffect.Navigation(
-                                NavigationEvent.ReplaceLast(
-                                    Screen.SetupUser.BirthDate())))
-                    }
+                    dispatchEffectSafely(
+                        Milliseconds(500),
+                        UiEffect.Navigation(
+                            NavigationEvent.ReplaceLast(
+                                Screen.SetupUser.BirthDate()))
+                    )
                 }
             }
         }
@@ -217,7 +216,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {
@@ -242,7 +241,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         val inDevelopmentDialogVisible: Boolean = false
     )
 
-    private enum class CodeInputState {
+    enum class CodeInputState {
         Default,
         Success,
         Error
@@ -257,7 +256,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         data object InDevelopmentDialogDismiss : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var phoneNumber: PhoneNumber = PhoneNumber()
         var requireCodeOperationActive: Boolean = false
         var remainingTime: Seconds = Seconds(0)
@@ -290,7 +289,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             inDevelopmentDialogVisible = inDevelopmentDialogVisible
         )
 
-        inner class ResendButtonTextStrategy : Strategy<String> {
+        private inner class ResendButtonTextStrategy : Strategy<String> {
             override val resolved = when {
                 codeInputState == CodeInputState.Success -> ""
                 requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)

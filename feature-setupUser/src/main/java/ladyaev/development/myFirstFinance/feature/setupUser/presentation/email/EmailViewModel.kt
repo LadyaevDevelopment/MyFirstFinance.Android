@@ -1,9 +1,7 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.email
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.misc.Email
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
@@ -13,9 +11,9 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyEmailUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
@@ -27,16 +25,17 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyEmailUseCase: SpecifyEmailUseCase,
     private val featureData: FeatureData,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    EmailViewModel.UiState,
+    EmailViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Unit>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     fun on(event: UserEvent) {
         when (event) {
@@ -56,7 +55,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
             }
             UserEvent.ToolbarBackButtonClick -> {
                 doOnHideKeyboard {
-                    mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                    dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
                 }
             }
             UserEvent.EmailBottomSheetDismiss -> {
@@ -70,14 +69,6 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                     errorState = ErrorState(false)
                 }
             }
-        }
-    }
-
-    private fun doOnHideKeyboard(block: () -> Unit) {
-        mutableEffect.post(UiEffect.HideKeyboard)
-        dispatchers.launchMain(viewModelScope) {
-            delay(300)
-            block()
         }
     }
 
@@ -116,14 +107,13 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
                     }
                 }
                 is OperationResult.Success -> {
-                    dispatchers.launchMain(viewModelScope) {
-                        doOnHideKeyboard {
-                            mutableEffect.post(
-                                UiEffect.Navigation(
-                                    NavigationEvent.Navigate(
-                                        Screen.SetupUser.ResidenceAddress(
-                                            ResidenceAddressScreenArguments(chosenCountry = featureData.country?.toUiModel())))))
-                        }
+                    doOnHideKeyboard {
+                        dispatchEffectSafely(
+                            UiEffect.Navigation(
+                                NavigationEvent.Navigate(
+                                    Screen.SetupUser.ResidenceAddress(
+                                        ResidenceAddressScreenArguments(chosenCountry = featureData.country?.toUiModel()))))
+                        )
                     }
                 }
             }
@@ -147,7 +137,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
         data object ErrorDialogDismiss : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var email: String = ""
         var bottomSheetVisible: Boolean = false
         var errorState: ErrorState = ErrorState(false)

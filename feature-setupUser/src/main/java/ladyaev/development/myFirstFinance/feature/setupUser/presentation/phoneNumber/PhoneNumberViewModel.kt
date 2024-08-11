@@ -1,27 +1,26 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.phoneNumber
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
-import ladyaev.development.myfirstfinance.domain.operation.OperationResult
-import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
-import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidation
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
+import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
+import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidation
 import ladyaev.development.myFirstFinance.core.di.CountryCache
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
+import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
-import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmationCodeScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.FeatureData
 import ladyaev.development.myfirstfinance.domain.entities.Country
+import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import javax.inject.Inject
 
 abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission : Any>(
@@ -29,16 +28,17 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     private val handleError: HandleError,
     private val featureData: FeatureData,
     private val phoneNumberValidation: PhoneNumberValidation,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Country?> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    PhoneNumberViewModel.UiState,
+    PhoneNumberViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Country?>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     override fun initialize(firstTime: Boolean, data: Country?) {
         if (firstTime) {
@@ -79,7 +79,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     fun on(event: UserEvent) {
         when (event) {
             UserEvent.CountryFlagClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.ChooseCountry())))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.ChooseCountry())))
             }
             is UserEvent.DigitalKeyPressed -> {
                 viewModelState.country?.let { country ->
@@ -123,12 +123,12 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
             UserEvent.NextButtonClick -> {
                 if (viewModelState.actual.nextButtonEnabled) {
                     featureData.country = viewModelState.country
-                    mutableEffect.post(
+                    dispatchEffectSafely(
                         UiEffect.Navigation(
                             NavigationEvent.Navigate(
                                 screen = Screen.SetupUser.ConfirmationCode(
@@ -181,7 +181,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
             errorState = errorState
         )
 
-        inner class NextButtonEnabledStrategy : Strategy<Boolean> {
+        private inner class NextButtonEnabledStrategy : Strategy<Boolean> {
             override val resolved get() = if (phoneNumberValidationResult.formattedPhoneNumber == null) {
                 actual.nextButtonEnabled
             } else {
@@ -189,7 +189,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
             }
         }
 
-        inner class PhoneNumberStrategy : Strategy<PhoneNumber> {
+        private inner class PhoneNumberStrategy : Strategy<PhoneNumber> {
             private val actualPhoneNumber get() = phoneNumberValidationResult.formattedPhoneNumber ?: actual.phoneNumber
 
             override val resolved get() = if (actualPhoneNumber.isEmpty) {

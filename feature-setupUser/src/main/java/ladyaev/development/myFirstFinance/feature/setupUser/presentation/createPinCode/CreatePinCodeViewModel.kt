@@ -1,10 +1,9 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.createPinCode
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.misc.Length
+import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
@@ -14,23 +13,24 @@ import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmPinCodeScreenArguments
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import javax.inject.Inject
 
 open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Length> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    CreatePinCodeViewModel.UiState,
+    CreatePinCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Length>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     override fun initialize(firstTime: Boolean, data: Length) {
         if (firstTime) {
@@ -60,13 +60,12 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
                                 code = newCode
                             }
                             if (newCode.length == viewModelState.codeLength) {
-                                dispatchers.launchMain(viewModelScope) {
-                                    delay(500)
-                                    mutableEffect.post(
-                                        UiEffect.Navigation(
-                                            NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
-                                                ConfirmPinCodeScreenArguments(viewModelState.code)))))
-                                }
+                                dispatchEffectSafely(
+                                    Milliseconds(500),
+                                    UiEffect.Navigation(
+                                        NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
+                                            ConfirmPinCodeScreenArguments(viewModelState.code))))
+                                )
                             }
                         }
                     }
@@ -81,7 +80,7 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
         }
     }
@@ -96,7 +95,7 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
         data class DigitalKeyPressed(val key: KeyboardButtonKey) : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var codeLength: Int = 0
         var code: String = ""
 

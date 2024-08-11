@@ -1,7 +1,6 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.birthDate
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ladyaev.development.myFirstFinance.core.common.utils.CurrentDate
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
@@ -14,7 +13,7 @@ import ladyaev.development.myFirstFinance.core.ui.extensions.to2day2month4yearFo
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyBirthDateUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
@@ -28,21 +27,22 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
     private val manageResources: ManageResources,
     private val currentDate: CurrentDate,
     private val specifyBirthDateUseCase: SpecifyBirthDateUseCase,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    BirthDateViewModel.UiState,
+    BirthDateViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Unit>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     fun on(event: UserEvent) {
         when (event) {
             UserEvent.ToolbarBackButtonClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
             is UserEvent.DateChanged -> {
                 viewModelState.dispatch {
@@ -56,7 +56,7 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
             }
             UserEvent.NextButtonClick -> {
                 if (viewModelState.actual.nextButtonEnabled && !viewModelState.operationActive) {
-                    specifyBirthDate(viewModelState.date ?: Date())
+                    specifyBirthDate()
                 }
             }
             UserEvent.ErrorDialogDismiss -> {
@@ -72,12 +72,12 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         }
     }
 
-    private fun specifyBirthDate(birthDate: Date) {
+    private fun specifyBirthDate() {
         dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
-            val result = specifyBirthDateUseCase.process(birthDate)
+            val result = specifyBirthDateUseCase.process(viewModelState.date ?: Date())
             viewModelState.dispatch {
                 operationActive = false
             }
@@ -103,9 +103,7 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
                     }
                 }
                 is OperationResult.Success -> {
-                    dispatchers.launchMain(viewModelScope) {
-                        mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
-                    }
+                    dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Name())))
                 }
             }
         }
@@ -129,7 +127,7 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
         data object DatePickerDialogDismiss : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var date: Date? = null
         var errorState: ErrorState = ErrorState(false)
         var operationActive: Boolean = false

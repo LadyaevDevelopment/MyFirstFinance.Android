@@ -1,9 +1,7 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.name
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.misc.Name
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
@@ -11,9 +9,9 @@ import ladyaev.development.myFirstFinance.core.ui.error.ErrorState
 import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
+import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyNameUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
@@ -23,16 +21,17 @@ import javax.inject.Inject
 open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyNameUseCase: SpecifyNameUseCase,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    NameViewModel.UiState,
+    NameViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Unit>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     fun on(event: UserEvent) {
         when (event) {
@@ -58,7 +57,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
             }
             UserEvent.ToolbarBackButtonClick -> {
                 doOnHideKeyboard {
-                    mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                    dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
                 }
             }
             UserEvent.ErrorDialogDismiss -> {
@@ -103,19 +102,11 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
                 is OperationResult.Success -> {
                     dispatchers.launchMain(viewModelScope) {
                         doOnHideKeyboard {
-                            mutableEffect.post(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Email())))
+                            dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.Email())))
                         }
                     }
                 }
             }
-        }
-    }
-
-    private fun doOnHideKeyboard(block: () -> Unit) {
-        mutableEffect.post(UiEffect.HideKeyboard)
-        dispatchers.launchMain(viewModelScope) {
-            delay(300)
-            block()
         }
     }
 
@@ -137,7 +128,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
         data object ErrorDialogDismiss : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var lastName: String = ""
         var firstName: String = ""
         var middleName: String = ""

@@ -1,30 +1,26 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.completeRegistration
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import javax.inject.Inject
 
 abstract class CompleteRegistrationViewModel<EffectTransmission : Any>(
-    private val dispatchers: ManageDispatchers,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Unit> {
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    dispatchers: ManageDispatchers,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel<EffectTransmission, Unit>(dispatchers, mutableEffect) {
 
     fun on(event: UserEvent) {
         when (event) {
             UserEvent.NextButtonClick -> {
-                mutableEffect.post(
+                dispatchEffectSafely(
                     UiEffect.Navigation(
                         NavigationEvent.ReplaceLast(
-                            Screen.Dashboard.Home()))
-                )
+                            Screen.Dashboard.Home())))
             }
         }
     }

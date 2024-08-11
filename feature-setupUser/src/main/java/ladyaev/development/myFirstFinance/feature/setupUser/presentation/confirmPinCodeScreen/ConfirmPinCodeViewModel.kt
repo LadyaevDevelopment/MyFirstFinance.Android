@@ -1,11 +1,10 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.confirmPinCodeScreen
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.Code
+import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.controls.keyboard.KeyboardButtonKey
 import ladyaev.development.myFirstFinance.core.ui.controls.progress.pinCodeProgress.DotMarkerState
@@ -15,7 +14,7 @@ import ladyaev.development.myFirstFinance.core.ui.error.HandleError
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelContract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyPinCodeUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
@@ -26,16 +25,17 @@ import javax.inject.Inject
 open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(
     private val handleError: HandleError,
     private val specifyPinCodeUseCase: SpecifyPinCodeUseCase,
-    private val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
-    private val mutableState: Transmission.Mutable<StateTransmission, UiState>,
-    private val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : ViewModel(), ViewModelContract<Code> {
+    dispatchers: ManageDispatchers = ManageDispatchers.Base(),
+    mutableState: Transmission.Mutable<StateTransmission, UiState>,
+    mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
+) : BaseViewModel.Stateful<
+    StateTransmission,
+    EffectTransmission,
+    ConfirmPinCodeViewModel.UiState,
+    ConfirmPinCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
+    Code>(dispatchers, mutableState, mutableEffect) {
 
-    private val viewModelState = ViewModelState()
-
-    val state: StateTransmission get() = mutableState.read()
-
-    val effect: EffectTransmission get() = mutableEffect.read()
+    override val viewModelState = ViewModelState()
 
     override fun initialize(firstTime: Boolean, data: Code) {
         if (firstTime) {
@@ -80,7 +80,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
                 }
             }
             UserEvent.ToolbarBackButtonClick -> {
-                mutableEffect.post(UiEffect.Navigation(NavigationEvent.PopLast))
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {
@@ -116,15 +116,14 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
                     }
                 }
                 is OperationResult.Success -> {
-                    dispatchers.launchMain(viewModelScope) {
-                        delay(500)
-                        mutableEffect.post(
-                            UiEffect.Navigation(
-                                NavigationEvent.PopAndNavigate(
-                                    popToScreen = Screen.SetupUser.PhoneNumber(null),
-                                    inclusive = true,
-                                    screenToShow = Screen.SetupUser.CompleteRegistration())))
-                    }
+                    dispatchEffectSafely(
+                        Milliseconds(500),
+                        UiEffect.Navigation(
+                            NavigationEvent.PopAndNavigate(
+                                popToScreen = Screen.SetupUser.PhoneNumber(null),
+                                inclusive = true,
+                                screenToShow = Screen.SetupUser.CompleteRegistration()))
+                    )
                 }
             }
         }
@@ -142,7 +141,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         data object ErrorDialogDismiss : UserEvent()
     }
 
-    private inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
+    inner class ViewModelState : ViewModelStateAbstract<UiState, StateTransmission, ViewModelState>(UiState(), viewModelScope, mutableState) {
         var enteredCode: String = ""
         var codeToConfirm: String = ""
         val codeLength get() = codeToConfirm.length
