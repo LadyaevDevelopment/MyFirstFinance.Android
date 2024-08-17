@@ -41,12 +41,12 @@ fun CustomScaffold(
         Column(
             horizontalAlignment = horizontalAlignment,
             modifier = Modifier
-                .applyIf(useContentHorizontalPadding) {
-                    padding(top = 8.dp, bottom = 16.dp, start = 24.dp, end = 24.dp) as Modifier.Companion
-                }
-                .applyIf(!useContentHorizontalPadding) {
-                    padding(top = 8.dp, bottom = 16.dp) as Modifier.Companion
-                }
+                .padding(
+                    top = 8.dp,
+                    bottom = 16.dp,
+                    start = if (useContentHorizontalPadding) 24.dp else 0.dp,
+                    end = if (useContentHorizontalPadding) 24.dp else 0.dp
+                )
                 .fillMaxSize()
                 .applyIf(contentScrollable) {
                     verticalScroll(scrollState)

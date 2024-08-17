@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -31,9 +32,8 @@ import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.button.ActionButton
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
-import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
-import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppColors
@@ -45,8 +45,8 @@ fun StartMenuScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: StartMenuViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, Unit)
+    LaunchedEffect(Unit) {
+        viewModel.initialize(Unit)
     }
 
     val focusManager = LocalFocusManager.current
@@ -135,12 +135,7 @@ fun StartMenuScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = 24.dp)
     ) {
-        Spacer(
-            Modifier
-                .height(16.dp)
-                .weight(1f)
-        )
-
+        ExpandedSpacer(minHeight = 16.dp)
     }
 
     DefaultErrorDialog(state = state.errorState) {

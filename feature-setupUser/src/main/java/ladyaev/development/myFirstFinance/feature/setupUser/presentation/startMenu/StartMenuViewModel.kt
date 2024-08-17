@@ -32,7 +32,7 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Unit) {
+    override fun onInitialized(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             requirePolicyDocuments()
         }
@@ -55,7 +55,7 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
     }
 
     private fun requirePolicyDocuments() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 loadingDocuments = true
             }

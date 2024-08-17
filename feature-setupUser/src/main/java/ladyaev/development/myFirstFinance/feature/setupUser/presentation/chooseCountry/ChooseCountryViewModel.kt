@@ -33,7 +33,7 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Unit) {
+    override fun onInitialized(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             requireCountries()
         }
@@ -68,11 +68,11 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
     }
 
     private fun requireCountries() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 loadingData = true
             }
-            val result = requireCountriesUseCase.process(viewModelScope)
+            val result = requireCountriesUseCase.process()
             viewModelState.dispatch {
                 loadingData = false
             }

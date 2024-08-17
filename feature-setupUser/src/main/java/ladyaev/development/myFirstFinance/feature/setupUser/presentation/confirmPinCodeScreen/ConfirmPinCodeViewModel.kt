@@ -41,7 +41,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Code) {
+    override fun onInitialized(firstTime: Boolean, data: Code) {
         if (firstTime) {
             viewModelState.dispatch {
                 codeToConfirm = data.data
@@ -99,7 +99,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
     }
 
     private fun specifyPinCode() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
@@ -157,16 +157,18 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         var errorState: ErrorState = ErrorState(false)
         var operationActive: Boolean = false
 
+        private val pinCodeMarkersStrategy = PinCodeMarkersStrategy()
+
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
-            codeMarkers = PinCodeMarkersStrategy().resolved,
+            codeMarkers = pinCodeMarkersStrategy.resolved,
             errorState = errorState,
             progressbarVisible = operationActive
         )
 
         private inner class PinCodeMarkersStrategy : Strategy<List<DotMarkerState>> {
-            override val resolved: List<DotMarkerState> = if (enteredCode.length == codeLength) {
+            override val resolved: List<DotMarkerState> get() = if (enteredCode.length == codeLength) {
                 if (enteredCode == codeToConfirm) {
                     List(codeLength) { DotMarkerState.Success }
                 } else {

@@ -81,7 +81,7 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
     }
 
     private fun specifyEmail() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }

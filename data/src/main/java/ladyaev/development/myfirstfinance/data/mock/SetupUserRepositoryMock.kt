@@ -9,6 +9,7 @@ import ladyaev.development.myFirstFinance.core.common.misc.Name
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myfirstfinance.domain.entities.ResidenceAddress
 import ladyaev.development.myfirstfinance.domain.entities.UserStatus
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.SetupUserRepository
@@ -21,52 +22,68 @@ import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyCo
 import java.util.Date
 import javax.inject.Inject
 
-class SetupUserRepositoryMock @Inject constructor() : SetupUserRepository {
+class SetupUserRepositoryMock @Inject constructor(
+    private val dispatchers: ManageDispatchers
+) : SetupUserRepository {
     override suspend fun requireConfirmationCode(phoneNumber: PhoneNumber): OperationResult<RequireConfirmationCodeResult, RequireConfirmationCodeError> {
-        delay(500)
-        return OperationResult.Success(
-            RequireConfirmationCodeResult(
-                Length(5),
-                Id("0"),
-                Seconds(10)
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(
+                RequireConfirmationCodeResult(
+                    Length(5),
+                    Id("0"),
+                    Seconds(10)
+                )
             )
-        )
+        }
     }
 
     override suspend fun verifyConfirmationCode(
         codeId: Id,
         code: Code
     ): OperationResult<Unit, VerifyConfirmationCodeError> {
-        delay(500)
-        return if (code.data == "11111") {
-            OperationResult.SpecificFailure(VerifyConfirmationCodeError.WrongCode)
-        } else {
-            OperationResult.Success(Unit)
+        return dispatchers.withIO {
+            delay(500)
+            if (code.data == "11111") {
+                OperationResult.SpecificFailure(VerifyConfirmationCodeError.WrongCode)
+            } else {
+                OperationResult.Success(Unit)
+            }   
         }
     }
 
     override suspend fun specifyBirthDate(birthDate: Date): OperationResult<SpecifyUserInfoResult, SpecifyBirthDateError> {
-        delay(500)
-        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyName, null))
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyName, null))   
+        }
     }
 
     override suspend fun specifyName(name: Name): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        delay(500)
-        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyEmail, null))
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyEmail, null))   
+        }
     }
 
     override suspend fun specifyEmail(email: Email): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        delay(500)
-        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToCreatePinCode, Length(4)))
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToCreatePinCode, Length(4)))
+        }
     }
 
     override suspend fun specifyPinCode(pinCode: Code): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        delay(500)
-        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyResidenceAddress, null))
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(SpecifyUserInfoResult(UserStatus.NeedToSpecifyResidenceAddress, null))
+        }
     }
 
     override suspend fun specifyResidenceAddress(residenceAddress: ResidenceAddress): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError> {
-        delay(500)
-        return OperationResult.Success(SpecifyUserInfoResult(UserStatus.Registered, null))
+        return dispatchers.withIO {
+            delay(500)
+            OperationResult.Success(SpecifyUserInfoResult(UserStatus.Registered, null))
+        }
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +26,6 @@ import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffo
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.AnimatedTitleToolbar
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
-import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -37,8 +37,8 @@ fun NameScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: NameViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, Unit)
+    LaunchedEffect(Unit) {
+        viewModel.initialize(Unit)
     }
 
     val focusManager = LocalFocusManager.current

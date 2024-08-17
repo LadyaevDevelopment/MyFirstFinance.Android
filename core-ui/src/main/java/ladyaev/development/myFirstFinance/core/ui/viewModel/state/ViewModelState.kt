@@ -8,7 +8,7 @@ abstract class ViewModelStateAbstract<UiState : Any, StateTransmission : Any, Im
     initialState: UiState,
     private val coroutineScope: CoroutineScope,
     private val transmission: Transmission.Mutable<StateTransmission, UiState>,
-    private val manageDispatchers: ManageDispatchers = ManageDispatchers.Base()
+    private val dispatchers: ManageDispatchers = ManageDispatchers.Base()
 ) : Transmission.Source<StateTransmission> {
 
     var actual: UiState private set
@@ -24,7 +24,7 @@ abstract class ViewModelStateAbstract<UiState : Any, StateTransmission : Any, Im
     abstract fun implementation(): Implementation
 
     fun dispatch(block: Implementation.() -> Unit) {
-        manageDispatchers.launchMainImmediate(coroutineScope) {
+        dispatchers.launchMainImmediate(coroutineScope) {
             block(implementation())
             map().let {
                 transmission.post(it)

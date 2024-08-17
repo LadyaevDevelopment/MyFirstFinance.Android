@@ -15,7 +15,7 @@ abstract class SplashScreenViewModel<EffectTransmission : Any>(
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
 ) : BaseViewModel<EffectTransmission, Unit, Unit>(dispatchers, mutableEffect) {
 
-    override fun initialize(firstTime: Boolean, data: Unit) {
+    override fun onInitialized(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             dispatchEffectSafely(
                 Milliseconds(3000),

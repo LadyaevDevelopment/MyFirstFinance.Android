@@ -32,7 +32,7 @@ interface AppComponent {
 
     val countryCache: CountryCache
 
-    val manageDispatchers: ManageDispatchers
+    val dispatchers: ManageDispatchers
 
     val manageResources: ManageResources
 

@@ -37,43 +37,17 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
     PhoneNumberViewModel.UserEvent,
     PhoneNumberViewModel.UiState,
     PhoneNumberViewModel<StateTransmission, EffectTransmission>.ViewModelState,
-    Country?>(dispatchers, mutableState, mutableEffect) {
+    PhoneNumberViewModel.InputData>(dispatchers, mutableState, mutableEffect) {
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Country?) {
+    override fun onInitialized(firstTime: Boolean, data: InputData) {
         if (firstTime) {
-            requireInitialData()
+            requireCountries()
         }
-        if (data != null) {
-            viewModelState.dispatch {
-                country = data
-            }
-        }
-    }
-
-    private fun requireInitialData() {
-        dispatchers.launchIO(viewModelScope) {
-            viewModelState.dispatch {
-                loadingData = true
-            }
-            val result = countryCache.data(viewModelScope)
-            viewModelState.dispatch {
-                loadingData = false
-            }
-            when (result) {
-                is OperationResult.StandardFailure -> {
-                    viewModelState.dispatch {
-                        errorState = ErrorState(true, handleError.map(result.error))
-                    }
-                }
-                is OperationResult.SpecificFailure -> {}
-                is OperationResult.Success -> {
-                    viewModelState.dispatch {
-                        country = result.data.items.firstOrNull()
-                    }
-                }
-            }
+        viewModelState.dispatch {
+            country = data.country
+            phoneNumberValidationResult = PhoneNumberValidation.TestResult(PhoneNumber(), false)
         }
     }
 
@@ -106,6 +80,31 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
             UserEvent.ErrorDialogDismiss -> {
                 viewModelState.dispatch {
                     errorState = ErrorState(false)
+                }
+            }
+        }
+    }
+
+    private fun requireCountries() {
+        dispatchers.launchMain(viewModelScope) {
+            viewModelState.dispatch {
+                loadingData = true
+            }
+            val result = countryCache.data()
+            viewModelState.dispatch {
+                loadingData = false
+            }
+            when (result) {
+                is OperationResult.StandardFailure -> {
+                    viewModelState.dispatch {
+                        errorState = ErrorState(true, handleError.map(result.error))
+                    }
+                }
+                is OperationResult.SpecificFailure -> {}
+                is OperationResult.Success -> {
+                    viewModelState.dispatch {
+                        country = result.data.items.firstOrNull()
+                    }
                 }
             }
         }
@@ -176,13 +175,16 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
         var phoneNumberValidationResult = PhoneNumberValidation.TestResult(PhoneNumber(), false)
         var errorState: ErrorState = ErrorState(false)
 
+        private val nextButtonEnabledStrategy = NextButtonEnabledStrategy()
+        private val phoneNumberStrategy = PhoneNumberStrategy()
+
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
             loadingData = loadingData,
-            nextButtonEnabled = NextButtonEnabledStrategy().resolved,
+            nextButtonEnabled = nextButtonEnabledStrategy.resolved,
             flagPath = country?.flagPath,
-            phoneNumber = PhoneNumberStrategy().resolved,
+            phoneNumber = phoneNumberStrategy.resolved,
             errorState = errorState
         )
 
@@ -219,4 +221,6 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()
     )
+
+    data class InputData(val country: Country?)
 }

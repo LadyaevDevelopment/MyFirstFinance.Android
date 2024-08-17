@@ -33,7 +33,7 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Length) {
+    override fun onInitialized(firstTime: Boolean, data: Length) {
         if (firstTime) {
             viewModelState.dispatch {
                 codeLength = data.data

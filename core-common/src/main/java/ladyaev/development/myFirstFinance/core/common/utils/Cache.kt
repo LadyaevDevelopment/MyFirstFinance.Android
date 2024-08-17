@@ -1,8 +1,8 @@
 package ladyaev.development.myFirstFinance.core.common.utils
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.util.concurrent.atomic.AtomicReference
 
 open class Cache<TData : Any>(
@@ -13,21 +13,23 @@ open class Cache<TData : Any>(
 
     private var job: AtomicReference<Deferred<TData>?> = AtomicReference(null)
 
-    suspend fun data(scope: CoroutineScope): TData {
+    suspend fun data(): TData {
         val data = cachedData.get()
         if (data != null) {
             return data
         }
 
-        return job.updateAndGet { currentJob ->
-            currentJob?.takeIf { it.isActive } ?: scope.async {
-                requestData().also { data ->
-                    if (dataValid(data)) {
-                        cachedData.set(data)
-                    } else {
-                        cachedData.set(null)
+        return coroutineScope {
+            job.updateAndGet { currentJob ->
+                currentJob?.takeIf { it.isActive } ?: async {
+                    requestData().also { data ->
+                        if (dataValid(data)) {
+                            cachedData.set(data)
+                        } else {
+                            cachedData.set(null)
+                        }
+                        job.set(null)
                     }
-                    job.set(null)
                 }
             }
         }!!.await()

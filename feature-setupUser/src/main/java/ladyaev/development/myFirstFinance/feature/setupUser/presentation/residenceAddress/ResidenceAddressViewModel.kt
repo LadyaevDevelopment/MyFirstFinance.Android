@@ -33,14 +33,14 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
     ResidenceAddressViewModel.UserEvent,
     ResidenceAddressViewModel.UiState,
     ResidenceAddressViewModel<StateTransmission, EffectTransmission>.ViewModelState,
-    Country?>(dispatchers, mutableState, mutableEffect) {
+    ResidenceAddressViewModel.InputData>(dispatchers, mutableState, mutableEffect) {
 
     override val viewModelState = ViewModelState()
 
-    override fun initialize(firstTime: Boolean, data: Country?) {
+    override fun onInitialized(firstTime: Boolean, data: InputData) {
         if (firstTime) {
             viewModelState.dispatch {
-                country = data
+                country = data.country
             }
         }
     }
@@ -86,7 +86,7 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
     }
 
     private fun specifyResidenceAddress() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }
@@ -189,4 +189,6 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
         Transmission.LiveDataBase(),
         Transmission.SingleLiveEventBase()
     )
+
+    data class InputData(val country: Country?)
 }

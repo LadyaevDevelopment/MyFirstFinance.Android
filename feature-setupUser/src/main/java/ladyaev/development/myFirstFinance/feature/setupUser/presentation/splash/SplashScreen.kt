@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,7 +20,6 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
-import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
@@ -30,8 +30,8 @@ fun SplashScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: SplashScreenViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, Unit)
+    LaunchedEffect(Unit) {
+        viewModel.initialize(Unit)
     }
 
     val focusManager = LocalFocusManager.current

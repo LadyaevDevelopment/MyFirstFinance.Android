@@ -72,7 +72,7 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
     }
 
     private fun specifyName() {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 operationActive = true
             }

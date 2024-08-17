@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -23,9 +24,8 @@ import ladyaev.development.myFirstFinance.core.ui.controls.input.CustomTextField
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.Toolbar
-import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
-import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.theme.AppTheme
@@ -36,8 +36,8 @@ fun EmailScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: EmailViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, Unit)
+    LaunchedEffect(Unit) {
+        viewModel.initialize(Unit)
     }
 
     val focusManager = LocalFocusManager.current

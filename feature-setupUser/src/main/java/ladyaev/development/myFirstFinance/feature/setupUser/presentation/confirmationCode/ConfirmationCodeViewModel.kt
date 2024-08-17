@@ -54,7 +54,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
 
     private var timerJob: Job? = null
 
-    override fun initialize(firstTime: Boolean, data: PhoneNumber) {
+    override fun onInitialized(firstTime: Boolean, data: PhoneNumber) {
         if (firstTime) {
             viewModelState.dispatch {
                 phoneNumber = data
@@ -132,7 +132,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         if (viewModelState.requireCodeOperationActive || !viewModelState.actual.requireCodeBtnEnabled) {
             return
         }
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
@@ -191,7 +191,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
     }
 
     private fun verifyConfirmationCode(codeId: Id, code: Code) {
-        dispatchers.launchIO(viewModelScope) {
+        dispatchers.launchMain(viewModelScope) {
             viewModelState.dispatch {
                 requireCodeOperationActive = true
             }
@@ -273,12 +273,14 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         var inDevelopmentDialogVisible: Boolean = false
         val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.data == 0
 
+        private val resendButtonTextStrategy = ResendButtonTextStrategy()
+
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
             requireCodeProgressbarVisible = requireCodeOperationActive,
             phoneNumber = phoneNumber.countryCode + " " + phoneNumber.number,
-            resendButtonText = ResendButtonTextStrategy().resolved,
+            resendButtonText = resendButtonTextStrategy.resolved,
             requireCodeBtnEnabled = requireCodeBtnEnabled,
             codeCells = List(codeLength) { index ->
                 InputCellData(
@@ -295,7 +297,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         )
 
         private inner class ResendButtonTextStrategy : Strategy<String> {
-            override val resolved = when {
+            override val resolved get() = when {
                 codeInputState == CodeInputState.Success -> ""
                 requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
                 else -> manageResources.string(

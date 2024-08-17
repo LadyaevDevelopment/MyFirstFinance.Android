@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -28,9 +29,8 @@ import ladyaev.development.myFirstFinance.core.ui.controls.input.CustomTextField
 import ladyaev.development.myFirstFinance.core.ui.controls.scaffold.CustomScaffold
 import ladyaev.development.myFirstFinance.core.ui.controls.space.ExpandedSpacer
 import ladyaev.development.myFirstFinance.core.ui.controls.toolbar.AnimatedTitleToolbar
-import ladyaev.development.myFirstFinance.core.ui.effects.FirstTimeSideEffect
-import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.dialogs.DefaultErrorDialog
+import ladyaev.development.myFirstFinance.core.ui.effects.SingleLiveEffect
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ResidenceAddressScreenArguments
@@ -44,8 +44,8 @@ fun ResidenceAddressScreen(
     handleNavigationEvent: (event: NavigationEvent) -> Unit,
     viewModel: ResidenceAddressViewModel.Base = viewModel(factory = viewModelFactory())
 ) {
-    FirstTimeSideEffect { firstTime ->
-        viewModel.initialize(firstTime, arguments.chosenCountry?.toEntity())
+    LaunchedEffect(arguments.chosenCountry) {
+        viewModel.initialize(ResidenceAddressViewModel.InputData(arguments.chosenCountry?.toEntity()))
     }
 
     val focusManager = LocalFocusManager.current
