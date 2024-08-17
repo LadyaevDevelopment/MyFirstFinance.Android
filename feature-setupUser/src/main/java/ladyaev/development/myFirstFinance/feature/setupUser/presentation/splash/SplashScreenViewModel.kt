@@ -13,7 +13,7 @@ import javax.inject.Inject
 abstract class SplashScreenViewModel<EffectTransmission : Any>(
     dispatchers: ManageDispatchers,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : BaseViewModel<EffectTransmission, Unit>(dispatchers, mutableEffect) {
+) : BaseViewModel<EffectTransmission, Unit, Unit>(dispatchers, mutableEffect) {
 
     override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {

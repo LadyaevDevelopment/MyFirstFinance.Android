@@ -26,6 +26,7 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    ChooseCountryViewModel.UserEvent,
     ChooseCountryViewModel.UiState,
     ChooseCountryViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Unit>(dispatchers, mutableState, mutableEffect) {
@@ -35,6 +36,34 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
     override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             requireCountries()
+        }
+    }
+
+    override fun on(event: UserEvent) {
+        when (event) {
+            is UserEvent.CountryChosen -> {
+                viewModelState.dispatch {
+                    chosenCountry = event.country
+                }
+            }
+            is UserEvent.QueryChanged -> {
+                viewModelState.dispatch {
+                    query = event.query
+                }
+            }
+            UserEvent.ToolbarBackButtonClick -> {
+                dispatchEffectSafely(
+                    UiEffect.Navigation(
+                        NavigationEvent.PopTo(
+                            screen = Screen.SetupUser.PhoneNumber(PhoneNumberScreenArguments(viewModelState.chosenCountry?.toUiModel())),
+                            inclusive = false))
+                )
+            }
+            UserEvent.ErrorDialogDismiss -> {
+                viewModelState.dispatch {
+                    errorState = ErrorState(false)
+                }
+            }
         }
     }
 
@@ -58,34 +87,6 @@ open class ChooseCountryViewModel<StateTransmission : Any, EffectTransmission : 
                     viewModelState.dispatch {
                         countries = result.data.items
                     }
-                }
-            }
-        }
-    }
-
-    fun on(event: UserEvent) {
-        when (event) {
-            is UserEvent.CountryChosen -> {
-                viewModelState.dispatch {
-                    chosenCountry = event.country
-                }
-            }
-            is UserEvent.QueryChanged -> {
-                viewModelState.dispatch {
-                    query = event.query
-                }
-            }
-            UserEvent.ToolbarBackButtonClick -> {
-                dispatchEffectSafely(
-                    UiEffect.Navigation(
-                        NavigationEvent.PopTo(
-                            screen = Screen.SetupUser.PhoneNumber(PhoneNumberScreenArguments(viewModelState.chosenCountry?.toUiModel())),
-                            inclusive = false))
-                )
-            }
-            UserEvent.ErrorDialogDismiss -> {
-                viewModelState.dispatch {
-                    errorState = ErrorState(false)
                 }
             }
         }

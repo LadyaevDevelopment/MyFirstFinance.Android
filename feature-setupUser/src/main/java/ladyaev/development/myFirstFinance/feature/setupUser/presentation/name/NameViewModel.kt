@@ -29,13 +29,14 @@ open class NameViewModel<StateTransmission : Any, EffectTransmission : Any>(
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    NameViewModel.UserEvent,
     NameViewModel.UiState,
     NameViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Unit>(dispatchers, mutableState, mutableEffect) {
 
     override val viewModelState = ViewModelState()
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             is UserEvent.FirstNameChanged -> {
                 viewModelState.dispatch {

@@ -29,13 +29,14 @@ open class EmailViewModel<StateTransmission : Any, EffectTransmission : Any>(
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    EmailViewModel.UserEvent,
     EmailViewModel.UiState,
     EmailViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Unit>(dispatchers, mutableState, mutableEffect) {
 
     override val viewModelState = ViewModelState()
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             is UserEvent.EmailChanged -> {
                 viewModelState.dispatch {

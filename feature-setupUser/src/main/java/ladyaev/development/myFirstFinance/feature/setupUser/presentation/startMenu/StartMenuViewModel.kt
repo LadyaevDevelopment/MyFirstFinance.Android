@@ -25,6 +25,7 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    StartMenuViewModel.UserEvent,
     StartMenuViewModel.UiState,
     StartMenuViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Unit>(dispatchers, mutableState, mutableEffect) {
@@ -34,6 +35,22 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
     override fun initialize(firstTime: Boolean, data: Unit) {
         if (firstTime) {
             requirePolicyDocuments()
+        }
+    }
+
+    override fun on(event: UserEvent) {
+        when (event) {
+            UserEvent.LoginBtnClick -> {
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
+            }
+            UserEvent.RegisterBtnClick -> {
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
+            }
+            UserEvent.ErrorDialogDismiss -> {
+                viewModelState.dispatch {
+                    errorState = ErrorState(false)
+                }
+            }
         }
     }
 
@@ -57,22 +74,6 @@ abstract class StartMenuViewModel<StateTransmission : Any, EffectTransmission : 
                     viewModelState.dispatch {
                         documents = result.data.items
                     }
-                }
-            }
-        }
-    }
-
-    fun on(event: UserEvent) {
-        when (event) {
-            UserEvent.LoginBtnClick -> {
-                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
-            }
-            UserEvent.RegisterBtnClick -> {
-                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.PhoneNumber(null))))
-            }
-            UserEvent.ErrorDialogDismiss -> {
-                viewModelState.dispatch {
-                    errorState = ErrorState(false)
                 }
             }
         }

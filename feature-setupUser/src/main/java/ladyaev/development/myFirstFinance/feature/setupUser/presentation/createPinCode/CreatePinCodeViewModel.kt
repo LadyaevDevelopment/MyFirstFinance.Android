@@ -26,6 +26,7 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    CreatePinCodeViewModel.UserEvent,
     CreatePinCodeViewModel.UiState,
     CreatePinCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Length>(dispatchers, mutableState, mutableEffect) {
@@ -40,48 +41,52 @@ open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : 
         }
     }
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             is UserEvent.DigitalKeyPressed -> {
-                when (event.key) {
-                    KeyboardButtonKey.Key0,
-                    KeyboardButtonKey.Key1,
-                    KeyboardButtonKey.Key2,
-                    KeyboardButtonKey.Key3,
-                    KeyboardButtonKey.Key4,
-                    KeyboardButtonKey.Key5,
-                    KeyboardButtonKey.Key6,
-                    KeyboardButtonKey.Key7,
-                    KeyboardButtonKey.Key8,
-                    KeyboardButtonKey.Key9 -> {
-                        if (viewModelState.code.length < viewModelState.codeLength) {
-                            val newCode = viewModelState.code + event.key.string
-                            viewModelState.dispatch {
-                                code = newCode
-                            }
-                            if (newCode.length == viewModelState.codeLength) {
-                                dispatchEffectSafely(
-                                    Milliseconds(500),
-                                    UiEffect.Navigation(
-                                        NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
-                                            ConfirmPinCodeScreenArguments(viewModelState.code))))
-                                )
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Delete -> {
-                        if (viewModelState.code.isNotEmpty()) {
-                            viewModelState.dispatch {
-                                code = code.substring(0, code.lastIndex)
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Fake -> {}
-                }
+                handleKey(event.key)
             }
             UserEvent.ToolbarBackButtonClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
             }
+        }
+    }
+
+    private fun handleKey(key: KeyboardButtonKey) {
+        when (key) {
+            KeyboardButtonKey.Key0,
+            KeyboardButtonKey.Key1,
+            KeyboardButtonKey.Key2,
+            KeyboardButtonKey.Key3,
+            KeyboardButtonKey.Key4,
+            KeyboardButtonKey.Key5,
+            KeyboardButtonKey.Key6,
+            KeyboardButtonKey.Key7,
+            KeyboardButtonKey.Key8,
+            KeyboardButtonKey.Key9 -> {
+                if (viewModelState.code.length < viewModelState.codeLength) {
+                    val newCode = viewModelState.code + key.string
+                    viewModelState.dispatch {
+                        code = newCode
+                    }
+                    if (newCode.length == viewModelState.codeLength) {
+                        dispatchEffectSafely(
+                            Milliseconds(500),
+                            UiEffect.Navigation(
+                                NavigationEvent.Navigate(Screen.SetupUser.ConfirmPinCode(
+                                    ConfirmPinCodeScreenArguments(viewModelState.code))))
+                        )
+                    }
+                }
+            }
+            KeyboardButtonKey.Delete -> {
+                if (viewModelState.code.isNotEmpty()) {
+                    viewModelState.dispatch {
+                        code = code.substring(0, code.lastIndex)
+                    }
+                }
+            }
+            KeyboardButtonKey.Fake -> {}
         }
     }
 

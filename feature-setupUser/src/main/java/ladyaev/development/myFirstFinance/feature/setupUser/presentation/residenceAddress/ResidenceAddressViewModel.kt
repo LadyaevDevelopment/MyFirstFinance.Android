@@ -30,6 +30,7 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    ResidenceAddressViewModel.UserEvent,
     ResidenceAddressViewModel.UiState,
     ResidenceAddressViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Country?>(dispatchers, mutableState, mutableEffect) {
@@ -44,7 +45,7 @@ open class ResidenceAddressViewModel<StateTransmission : Any, EffectTransmission
         }
     }
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             is UserEvent.CityChanged -> {
                 viewModelState.dispatch {

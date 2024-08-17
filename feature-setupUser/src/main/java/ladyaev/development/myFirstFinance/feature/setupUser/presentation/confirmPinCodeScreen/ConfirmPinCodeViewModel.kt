@@ -34,6 +34,7 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    ConfirmPinCodeViewModel.UserEvent,
     ConfirmPinCodeViewModel.UiState,
     ConfirmPinCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Code>(dispatchers, mutableState, mutableEffect) {
@@ -48,39 +49,10 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         }
     }
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             is UserEvent.DigitalKeyPressed -> {
-                when (event.key) {
-                    KeyboardButtonKey.Key0,
-                    KeyboardButtonKey.Key1,
-                    KeyboardButtonKey.Key2,
-                    KeyboardButtonKey.Key3,
-                    KeyboardButtonKey.Key4,
-                    KeyboardButtonKey.Key5,
-                    KeyboardButtonKey.Key6,
-                    KeyboardButtonKey.Key7,
-                    KeyboardButtonKey.Key8,
-                    KeyboardButtonKey.Key9 -> {
-                        if (viewModelState.enteredCode.length < viewModelState.codeLength) {
-                            val newCode = viewModelState.enteredCode + event.key.string
-                            viewModelState.dispatch {
-                                enteredCode = newCode
-                            }
-                            if (newCode.length == viewModelState.codeLength) {
-                                specifyPinCode()
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Delete -> {
-                        if (viewModelState.enteredCode.isNotEmpty()) {
-                            viewModelState.dispatch {
-                                enteredCode = enteredCode.substring(0, enteredCode.lastIndex)
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Fake -> {}
-                }
+                handleKey(event.key)
             }
             UserEvent.ToolbarBackButtonClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
@@ -90,6 +62,39 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
                     errorState = ErrorState(false)
                 }
             }
+        }
+    }
+
+    private fun handleKey(key: KeyboardButtonKey) {
+        when (key) {
+            KeyboardButtonKey.Key0,
+            KeyboardButtonKey.Key1,
+            KeyboardButtonKey.Key2,
+            KeyboardButtonKey.Key3,
+            KeyboardButtonKey.Key4,
+            KeyboardButtonKey.Key5,
+            KeyboardButtonKey.Key6,
+            KeyboardButtonKey.Key7,
+            KeyboardButtonKey.Key8,
+            KeyboardButtonKey.Key9 -> {
+                if (viewModelState.enteredCode.length < viewModelState.codeLength) {
+                    val newCode = viewModelState.enteredCode + key.string
+                    viewModelState.dispatch {
+                        enteredCode = newCode
+                    }
+                    if (newCode.length == viewModelState.codeLength) {
+                        specifyPinCode()
+                    }
+                }
+            }
+            KeyboardButtonKey.Delete -> {
+                if (viewModelState.enteredCode.isNotEmpty()) {
+                    viewModelState.dispatch {
+                        enteredCode = enteredCode.substring(0, enteredCode.lastIndex)
+                    }
+                }
+            }
+            KeyboardButtonKey.Fake -> {}
         }
     }
 

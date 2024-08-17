@@ -12,9 +12,9 @@ import javax.inject.Inject
 abstract class CompleteRegistrationViewModel<EffectTransmission : Any>(
     dispatchers: ManageDispatchers,
     mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-) : BaseViewModel<EffectTransmission, Unit>(dispatchers, mutableEffect) {
+) : BaseViewModel<EffectTransmission, CompleteRegistrationViewModel.UserEvent, Unit>(dispatchers, mutableEffect) {
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             UserEvent.NextButtonClick -> {
                 dispatchEffectSafely(

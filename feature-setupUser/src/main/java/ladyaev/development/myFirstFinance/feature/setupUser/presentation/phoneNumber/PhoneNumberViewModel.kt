@@ -34,6 +34,7 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    PhoneNumberViewModel.UserEvent,
     PhoneNumberViewModel.UiState,
     PhoneNumberViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Country?>(dispatchers, mutableState, mutableEffect) {
@@ -76,51 +77,13 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
         }
     }
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             UserEvent.CountryFlagClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.Navigate(Screen.SetupUser.ChooseCountry())))
             }
             is UserEvent.DigitalKeyPressed -> {
-                viewModelState.country?.let { country ->
-                    val normalizedCountryCode = phoneNumberValidation.normalizedNumber(country.phoneNumberCode)
-                    val normalizedPhoneNumber = phoneNumberValidation.normalizedNumber(viewModelState.actual.phoneNumber.toString())
-
-                    when (event.key) {
-                        KeyboardButtonKey.Key0,
-                        KeyboardButtonKey.Key1,
-                        KeyboardButtonKey.Key2,
-                        KeyboardButtonKey.Key3,
-                        KeyboardButtonKey.Key4,
-                        KeyboardButtonKey.Key5,
-                        KeyboardButtonKey.Key6,
-                        KeyboardButtonKey.Key7,
-                        KeyboardButtonKey.Key8,
-                        KeyboardButtonKey.Key9 -> {
-                            viewModelState.dispatch {
-                                phoneNumberValidationResult = phoneNumberValidation.test(
-                                    phoneNumber = normalizedPhoneNumber + event.key.string,
-                                    phoneNumberMasks = viewModelState.country?.let { country ->
-                                        country.phoneNumberMasks.map { mask -> PhoneNumber(country.phoneNumberCode, mask) }
-                                    } ?: listOf()
-                                )
-                            }
-                        }
-                        KeyboardButtonKey.Delete -> {
-                            if (normalizedPhoneNumber.length > normalizedCountryCode.length) {
-                                viewModelState.dispatch {
-                                    phoneNumberValidationResult = phoneNumberValidation.test(
-                                        phoneNumber = normalizedPhoneNumber.substring(0, normalizedPhoneNumber.lastIndex),
-                                        phoneNumberMasks = viewModelState.country?.let { country ->
-                                            country.phoneNumberMasks.map { mask -> PhoneNumber(country.phoneNumberCode, mask) }
-                                        } ?: listOf()
-                                    )
-                                }
-                            }
-                        }
-                        KeyboardButtonKey.Fake -> {}
-                    }
-                }
+                handleKey(event.key)
             }
             UserEvent.ToolbarBackButtonClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
@@ -144,6 +107,48 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
                 viewModelState.dispatch {
                     errorState = ErrorState(false)
                 }
+            }
+        }
+    }
+
+    private fun handleKey(key: KeyboardButtonKey) {
+        viewModelState.country?.let { country ->
+            val normalizedCountryCode = phoneNumberValidation.normalizedNumber(country.phoneNumberCode)
+            val normalizedPhoneNumber = phoneNumberValidation.normalizedNumber(viewModelState.actual.phoneNumber.toString())
+
+            when (key) {
+                KeyboardButtonKey.Key0,
+                KeyboardButtonKey.Key1,
+                KeyboardButtonKey.Key2,
+                KeyboardButtonKey.Key3,
+                KeyboardButtonKey.Key4,
+                KeyboardButtonKey.Key5,
+                KeyboardButtonKey.Key6,
+                KeyboardButtonKey.Key7,
+                KeyboardButtonKey.Key8,
+                KeyboardButtonKey.Key9 -> {
+                    viewModelState.dispatch {
+                        phoneNumberValidationResult = phoneNumberValidation.test(
+                            phoneNumber = normalizedPhoneNumber + key.string,
+                            phoneNumberMasks = viewModelState.country?.let { country ->
+                                country.phoneNumberMasks.map { mask -> PhoneNumber(country.phoneNumberCode, mask) }
+                            } ?: listOf()
+                        )
+                    }
+                }
+                KeyboardButtonKey.Delete -> {
+                    if (normalizedPhoneNumber.length > normalizedCountryCode.length) {
+                        viewModelState.dispatch {
+                            phoneNumberValidationResult = phoneNumberValidation.test(
+                                phoneNumber = normalizedPhoneNumber.substring(0, normalizedPhoneNumber.lastIndex),
+                                phoneNumberMasks = viewModelState.country?.let { country ->
+                                    country.phoneNumberMasks.map { mask -> PhoneNumber(country.phoneNumberCode, mask) }
+                                } ?: listOf()
+                            )
+                        }
+                    }
+                }
+                KeyboardButtonKey.Fake -> {}
             }
         }
     }

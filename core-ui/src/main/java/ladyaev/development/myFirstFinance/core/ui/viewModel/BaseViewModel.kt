@@ -9,7 +9,7 @@ import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 
-abstract class BaseViewModel<EffectTransmission : Any, TInputData>(
+abstract class BaseViewModel<EffectTransmission : Any, UserEvent : Any, TInputData>(
     protected val dispatchers: ManageDispatchers = ManageDispatchers.Base(),
     protected val mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
 ) : ViewModel() {
@@ -17,6 +17,8 @@ abstract class BaseViewModel<EffectTransmission : Any, TInputData>(
     val effect: EffectTransmission get() = mutableEffect.read()
 
     open fun initialize(firstTime: Boolean, data: TInputData) = run {}
+
+    open fun on(event: UserEvent) = run {}
 
     protected fun doOnHideKeyboard(block: () -> Unit) {
         dispatchers.launchMain(viewModelScope) {
@@ -42,13 +44,14 @@ abstract class BaseViewModel<EffectTransmission : Any, TInputData>(
     abstract class Stateful<
         StateTransmission : Any,
         EffectTransmission : Any,
+        UserEvent : Any,
         UiState : Any,
         TViewModelState : ViewModelStateAbstract<UiState, StateTransmission, *>,
         TInputData>(
         dispatchers: ManageDispatchers = ManageDispatchers.Base(),
         protected val mutableState: Transmission.Mutable<StateTransmission, UiState>,
         mutableEffect: Transmission.Mutable<EffectTransmission, UiEffect>
-    ) : BaseViewModel<EffectTransmission, TInputData>(dispatchers, mutableEffect) {
+    ) : BaseViewModel<EffectTransmission, UserEvent, TInputData>(dispatchers, mutableEffect) {
 
         protected abstract val viewModelState : TViewModelState
 

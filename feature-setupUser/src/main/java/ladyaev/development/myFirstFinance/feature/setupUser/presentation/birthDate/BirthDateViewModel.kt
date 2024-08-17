@@ -35,13 +35,14 @@ open class BirthDateViewModel<StateTransmission : Any, EffectTransmission : Any>
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    BirthDateViewModel.UserEvent,
     BirthDateViewModel.UiState,
     BirthDateViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     Unit>(dispatchers, mutableState, mutableEffect) {
 
     override val viewModelState = ViewModelState()
 
-    fun on(event: UserEvent) {
+    override fun on(event: UserEvent) {
         when (event) {
             UserEvent.ToolbarBackButtonClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))

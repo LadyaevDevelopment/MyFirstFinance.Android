@@ -45,6 +45,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
 ) : BaseViewModel.Stateful<
     StateTransmission,
     EffectTransmission,
+    ConfirmationCodeViewModel.UserEvent,
     ConfirmationCodeViewModel.UiState,
     ConfirmationCodeViewModel<StateTransmission, EffectTransmission>.ViewModelState,
     PhoneNumber>(dispatchers, mutableState, mutableEffect) {
@@ -62,13 +63,68 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         }
     }
 
-    private fun startTimer(seconds: Int) {
-        timerJob = viewModelScope.launch {
-            timer(seconds).collect {
+    override fun on(event: UserEvent) {
+        when (event) {
+            UserEvent.ContactSupportButtonClick -> {
                 viewModelState.dispatch {
-                    remainingTime = Seconds(it)
+                    inDevelopmentDialogVisible = true
                 }
             }
+            is UserEvent.DigitalKeyPressed -> {
+                handleKey(event.key)
+            }
+            UserEvent.ResendButtonClick -> {
+                if (viewModelState.actual.requireCodeBtnEnabled) {
+                    requireConfirmationCode(viewModelState.phoneNumber)
+                }
+            }
+            UserEvent.ToolbarBackButtonClick -> {
+                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
+            }
+            UserEvent.ErrorDialogDismiss -> {
+                viewModelState.dispatch {
+                    errorState = ErrorState(false)
+                }
+            }
+            UserEvent.InDevelopmentDialogDismiss -> {
+                viewModelState.dispatch {
+                    inDevelopmentDialogVisible = false
+                }
+            }
+        }
+    }
+
+    private fun handleKey(key: KeyboardButtonKey) {
+        when (key) {
+            KeyboardButtonKey.Key0,
+            KeyboardButtonKey.Key1,
+            KeyboardButtonKey.Key2,
+            KeyboardButtonKey.Key3,
+            KeyboardButtonKey.Key4,
+            KeyboardButtonKey.Key5,
+            KeyboardButtonKey.Key6,
+            KeyboardButtonKey.Key7,
+            KeyboardButtonKey.Key8,
+            KeyboardButtonKey.Key9 -> {
+                if (viewModelState.enteredCode.length < viewModelState.codeLength) {
+                    val newCode = viewModelState.enteredCode + key.string
+                    viewModelState.dispatch {
+                        enteredCode = newCode
+                    }
+                    if (newCode.length == viewModelState.codeLength) {
+                        verifyConfirmationCode(viewModelState.codeId, Code(newCode))
+                    }
+                }
+            }
+            KeyboardButtonKey.Delete -> {
+                if (viewModelState.enteredCode.isNotEmpty()) {
+                    viewModelState.dispatch {
+                        enteredCode = enteredCode.substring(0, enteredCode.lastIndex)
+                        codeInputState = CodeInputState.Default
+                    }
+                }
+            }
+            KeyboardButtonKey.Fake -> {}
         }
     }
 
@@ -124,6 +180,16 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         }
     }
 
+    private fun startTimer(seconds: Int) {
+        timerJob = viewModelScope.launch {
+            timer(seconds).collect {
+                viewModelState.dispatch {
+                    remainingTime = Seconds(it)
+                }
+            }
+        }
+    }
+
     private fun verifyConfirmationCode(codeId: Id, code: Code) {
         dispatchers.launchIO(viewModelScope) {
             viewModelState.dispatch {
@@ -165,67 +231,6 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                             NavigationEvent.ReplaceLast(
                                 Screen.SetupUser.BirthDate()))
                     )
-                }
-            }
-        }
-    }
-
-    fun on(event: UserEvent) {
-        when (event) {
-            UserEvent.ContactSupportButtonClick -> {
-                viewModelState.dispatch {
-                    inDevelopmentDialogVisible = true
-                }
-            }
-            is UserEvent.DigitalKeyPressed -> {
-                when (event.key) {
-                    KeyboardButtonKey.Key0,
-                    KeyboardButtonKey.Key1,
-                    KeyboardButtonKey.Key2,
-                    KeyboardButtonKey.Key3,
-                    KeyboardButtonKey.Key4,
-                    KeyboardButtonKey.Key5,
-                    KeyboardButtonKey.Key6,
-                    KeyboardButtonKey.Key7,
-                    KeyboardButtonKey.Key8,
-                    KeyboardButtonKey.Key9 -> {
-                        if (viewModelState.enteredCode.length < viewModelState.codeLength) {
-                            val newCode = viewModelState.enteredCode + event.key.string
-                            viewModelState.dispatch {
-                                enteredCode = newCode
-                            }
-                            if (newCode.length == viewModelState.codeLength) {
-                                verifyConfirmationCode(viewModelState.codeId, Code(newCode))
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Delete -> {
-                        if (viewModelState.enteredCode.isNotEmpty()) {
-                            viewModelState.dispatch {
-                                enteredCode = enteredCode.substring(0, enteredCode.lastIndex)
-                                codeInputState = CodeInputState.Default
-                            }
-                        }
-                    }
-                    KeyboardButtonKey.Fake -> {}
-                }
-            }
-            UserEvent.ResendButtonClick -> {
-                if (viewModelState.actual.requireCodeBtnEnabled) {
-                    requireConfirmationCode(viewModelState.phoneNumber)
-                }
-            }
-            UserEvent.ToolbarBackButtonClick -> {
-                dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
-            }
-            UserEvent.ErrorDialogDismiss -> {
-                viewModelState.dispatch {
-                    errorState = ErrorState(false)
-                }
-            }
-            UserEvent.InDevelopmentDialogDismiss -> {
-                viewModelState.dispatch {
-                    inDevelopmentDialogVisible = false
                 }
             }
         }
