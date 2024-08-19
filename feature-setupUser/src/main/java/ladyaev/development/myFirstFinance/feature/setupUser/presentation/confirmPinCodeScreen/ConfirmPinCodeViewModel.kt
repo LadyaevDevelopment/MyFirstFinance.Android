@@ -167,8 +167,10 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
             progressbarVisible = operationActive
         )
 
-        private inner class PinCodeMarkersStrategy : Strategy<List<DotMarkerState>> {
-            override val resolved: List<DotMarkerState> get() = if (enteredCode.length == codeLength) {
+        private inner class PinCodeMarkersStrategy : Strategy.Base<List<DotMarkerState>>() {
+            override fun actualKeyArgument() = enteredCode
+
+            override fun resolve(): List<DotMarkerState> = if (enteredCode.length == codeLength) {
                 if (enteredCode == codeToConfirm) {
                     List(codeLength) { DotMarkerState.Success }
                 } else {

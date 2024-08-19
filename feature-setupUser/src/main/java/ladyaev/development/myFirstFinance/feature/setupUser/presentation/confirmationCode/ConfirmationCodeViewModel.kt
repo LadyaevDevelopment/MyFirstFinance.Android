@@ -11,8 +11,12 @@ import ladyaev.development.myFirstFinance.core.common.misc.Id
 import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
+import ladyaev.development.myFirstFinance.core.common.utils.DispatchUpdates
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
+import ladyaev.development.myFirstFinance.core.common.utils.computable
+import ladyaev.development.myFirstFinance.core.common.utils.delegates.dispatchUpdates
+import ladyaev.development.myFirstFinance.core.common.utils.observableOf
 import ladyaev.development.myFirstFinance.core.di.timer
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellData
@@ -106,21 +110,21 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             KeyboardButtonKey.Key7,
             KeyboardButtonKey.Key8,
             KeyboardButtonKey.Key9 -> {
-                if (viewModelState.enteredCode.length < viewModelState.codeLength) {
-                    val newCode = viewModelState.enteredCode + key.string
+                if (viewModelState.enteredCode().length < viewModelState.codeLength()) {
+                    val newCode = viewModelState.enteredCode() + key.string
                     viewModelState.dispatch {
-                        enteredCode = newCode
+                        enteredCode.post(newCode)
                     }
-                    if (newCode.length == viewModelState.codeLength) {
+                    if (newCode.length == viewModelState.codeLength()) {
                         verifyConfirmationCode(viewModelState.codeId, Code(newCode))
                     }
                 }
             }
             KeyboardButtonKey.Delete -> {
-                if (viewModelState.enteredCode.isNotEmpty()) {
+                if (viewModelState.enteredCode().isNotEmpty()) {
                     viewModelState.dispatch {
-                        enteredCode = enteredCode.substring(0, enteredCode.lastIndex)
-                        codeInputState = CodeInputState.Default
+                        enteredCode.post(enteredCode().substring(0, enteredCode().lastIndex))
+                        codeInputState.post(CodeInputState.Default)
                     }
                 }
             }
@@ -153,8 +157,8 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                         }
                         RequireConfirmationCodeError.WrongCode -> {
                             viewModelState.dispatch {
-                                enteredCode = ""
-                                codeInputState = CodeInputState.Error
+                                enteredCode.value = ""
+                                codeInputState.value = CodeInputState.Error
                             }
                         }
                         is RequireConfirmationCodeError.UserTemporaryBlocked -> {
@@ -169,9 +173,9 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 }
                 is OperationResult.Success -> {
                     viewModelState.dispatch {
-                        enteredCode = ""
-                        codeInputState = CodeInputState.Default
-                        codeLength = result.data.codeLength.data
+                        enteredCode.value = ""
+                        codeInputState.value = CodeInputState.Default
+                        codeLength.value = result.data.codeLength.data
                         codeId = result.data.codeId
                     }
                     startTimer(result.data.resendingTimeInterval.data)
@@ -215,7 +219,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                         }
                         VerifyConfirmationCodeError.WrongCode -> {
                             viewModelState.dispatch {
-                                codeInputState = CodeInputState.Error
+                                codeInputState.value = CodeInputState.Error
                             }
                         }
                     }
@@ -223,7 +227,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 is OperationResult.Success -> {
                     timerJob?.cancelAndJoin()
                     viewModelState.dispatch {
-                        codeInputState = CodeInputState.Success
+                        codeInputState.value = CodeInputState.Success
                     }
                     dispatchEffectSafely(
                         Milliseconds(500),
@@ -265,12 +269,13 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         var phoneNumber: PhoneNumber = PhoneNumber()
         var requireCodeOperationActive: Boolean = false
         var remainingTime: Seconds = Seconds(0)
-        var codeLength: Int = 0
-        var enteredCode: String = ""
         var codeId: Id = Id("")
-        var codeInputState: CodeInputState = CodeInputState.Default
         var errorState: ErrorState = ErrorState(false)
         var inDevelopmentDialogVisible: Boolean = false
+
+        val codeLength = observableOf(0)
+        val enteredCode = observableOf("")
+        val codeInputState = observableOf(CodeInputState.Default)
         val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.data == 0
 
         private val resendButtonTextStrategy = ResendButtonTextStrategy()
@@ -282,7 +287,13 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             phoneNumber = phoneNumber.countryCode + " " + phoneNumber.number,
             resendButtonText = resendButtonTextStrategy.resolved,
             requireCodeBtnEnabled = requireCodeBtnEnabled,
-            codeCells = List(codeLength) { index ->
+            codeCells = codeCells.actual,
+            errorState = errorState,
+            inDevelopmentDialogVisible = inDevelopmentDialogVisible
+        )
+
+        private val codeCells = computable(listOf(), codeLength, enteredCode, codeInputState) { codeLength, enteredCode, codeInputState ->
+            List(codeLength) { index ->
                 InputCellData(
                     text = enteredCode.elementAtOrNull(index)?.toString() ?: "",
                     state = when (codeInputState) {
@@ -291,14 +302,12 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                         CodeInputState.Error -> InputCellState.Error
                     }
                 )
-            },
-            errorState = errorState,
-            inDevelopmentDialogVisible = inDevelopmentDialogVisible
-        )
+            }
+        }
 
         private inner class ResendButtonTextStrategy : Strategy<String> {
             override val resolved get() = when {
-                codeInputState == CodeInputState.Success -> ""
+                codeInputState.value == CodeInputState.Success -> ""
                 requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
                 else -> manageResources.string(
                     R.string.confirmationCode_resendIn,
