@@ -10,7 +10,7 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequirePolicyDocumentsUseCase
 import ladyaev.development.myfirstfinance.domain.entities.PolicyDocument
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult

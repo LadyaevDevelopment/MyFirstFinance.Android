@@ -15,11 +15,15 @@ import ladyaev.development.myfirstfinance.domain.repositories.setupUser.specifyB
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyConfirmationCode.VerifyConfirmationCodeError
 import java.util.Date
 
-interface SetupUserRepository {
+interface RequireConfirmationCode {
     suspend fun requireConfirmationCode(phoneNumber: PhoneNumber): OperationResult<RequireConfirmationCodeResult, RequireConfirmationCodeError>
+}
 
+interface VerifyConfirmationCode {
     suspend fun verifyConfirmationCode(codeId: Id, code: Code): OperationResult<Unit, VerifyConfirmationCodeError>
+}
 
+interface SetupUserRepository : RequireConfirmationCode, VerifyConfirmationCode {
     suspend fun specifyBirthDate(birthDate: Date): OperationResult<SpecifyUserInfoResult, SpecifyBirthDateError>
 
     suspend fun specifyName(name: Name): OperationResult<SpecifyUserInfoResult, SpecifyUserInfoError>

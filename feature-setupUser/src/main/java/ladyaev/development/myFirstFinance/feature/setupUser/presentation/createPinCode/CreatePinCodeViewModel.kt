@@ -15,7 +15,7 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.ConfirmPinCodeScreenArguments
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
 import javax.inject.Inject
 
 open class CreatePinCodeViewModel<StateTransmission : Any, EffectTransmission : Any>(

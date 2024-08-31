@@ -13,7 +13,7 @@ import ladyaev.development.myFirstFinance.core.ui.extensions.to2day2month4yearFo
 import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireChosenCountryUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.SpecifyBirthDateUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.navigation.UserStatusToScreen

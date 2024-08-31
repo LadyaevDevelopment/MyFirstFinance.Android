@@ -17,7 +17,7 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.Confirmat
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.ChooseCountryUseCase
 import ladyaev.development.myfirstfinance.domain.entities.Country
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult

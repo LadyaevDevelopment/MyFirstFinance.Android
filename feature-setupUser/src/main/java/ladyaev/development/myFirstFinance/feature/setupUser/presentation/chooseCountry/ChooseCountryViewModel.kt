@@ -12,7 +12,7 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.arguments.PhoneNumb
 import ladyaev.development.myFirstFinance.core.ui.navigation.models.toUiModel
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireCountriesUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import javax.inject.Inject

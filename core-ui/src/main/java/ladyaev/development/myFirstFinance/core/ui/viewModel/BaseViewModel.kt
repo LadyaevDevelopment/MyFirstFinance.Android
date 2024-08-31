@@ -7,7 +7,6 @@ import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.ui.effects.UiEffect
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
 
 abstract class BaseViewModel<EffectTransmission : Any, UserEvent : Any, TInputData : Any>(
     protected val dispatchers: ManageDispatchers = ManageDispatchers.Base(),

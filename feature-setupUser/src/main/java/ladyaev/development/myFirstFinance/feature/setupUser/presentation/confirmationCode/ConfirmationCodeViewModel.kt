@@ -5,17 +5,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.Code
 import ladyaev.development.myFirstFinance.core.common.misc.Id
 import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
-import ladyaev.development.myFirstFinance.core.common.utils.DispatchUpdates
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
 import ladyaev.development.myFirstFinance.core.common.utils.computable
-import ladyaev.development.myFirstFinance.core.common.utils.delegates.dispatchUpdates
 import ladyaev.development.myFirstFinance.core.common.utils.observableOf
 import ladyaev.development.myFirstFinance.core.di.timer
 import ladyaev.development.myFirstFinance.core.resources.R
@@ -29,12 +26,16 @@ import ladyaev.development.myFirstFinance.core.ui.navigation.NavigationEvent
 import ladyaev.development.myFirstFinance.core.ui.navigation.Screen
 import ladyaev.development.myFirstFinance.core.ui.transmission.Transmission
 import ladyaev.development.myFirstFinance.core.ui.viewModel.BaseViewModel
-import ladyaev.development.myFirstFinance.core.ui.viewModel.state.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.ViewModelStateAbstract
+import ladyaev.development.myFirstFinance.core.ui.viewModel.operations.HandleKeyOperation
+import ladyaev.development.myFirstFinance.core.ui.viewModel.operations.RequireConfirmationCodeOperation
+import ladyaev.development.myFirstFinance.core.ui.viewModel.operations.VerifyConfirmationCodeOperation
 import ladyaev.development.myFirstFinance.feature.setupUser.business.RequireConfirmationCodeUseCase
 import ladyaev.development.myFirstFinance.feature.setupUser.business.VerifyConfirmationCodeUseCase
 import ladyaev.development.myfirstfinance.domain.operation.OperationResult
 import ladyaev.development.myfirstfinance.domain.operation.StandardError
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeError
+import ladyaev.development.myfirstfinance.domain.repositories.setupUser.requireConfirmationCode.RequireConfirmationCodeResult
 import ladyaev.development.myfirstfinance.domain.repositories.setupUser.verifyConfirmationCode.VerifyConfirmationCodeError
 import javax.inject.Inject
 
@@ -63,7 +64,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             viewModelState.dispatch {
                 phoneNumber = data
             }
-            requireConfirmationCode(data)
+            requireConfirmationCode.process(RequireConfirmationCodeOperation.Data(data))
         }
     }
 
@@ -75,12 +76,14 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
                 }
             }
             is UserEvent.DigitalKeyPressed -> {
-                handleKey(event.key)
+                handleKey.process(HandleKeyOperation.Data(
+                    event.key,
+                    viewModelState.enteredCode(),
+                    viewModelState.codeLength()
+                ))
             }
             UserEvent.ResendButtonClick -> {
-                if (viewModelState.actual.requireCodeBtnEnabled) {
-                    requireConfirmationCode(viewModelState.phoneNumber)
-                }
+                requireConfirmationCode.process(RequireConfirmationCodeOperation.Data(viewModelState.phoneNumber))
             }
             UserEvent.ToolbarBackButtonClick -> {
                 dispatchEffectSafely(UiEffect.Navigation(NavigationEvent.PopLast))
@@ -98,89 +101,65 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         }
     }
 
-    private fun handleKey(key: KeyboardButtonKey) {
-        when (key) {
-            KeyboardButtonKey.Key0,
-            KeyboardButtonKey.Key1,
-            KeyboardButtonKey.Key2,
-            KeyboardButtonKey.Key3,
-            KeyboardButtonKey.Key4,
-            KeyboardButtonKey.Key5,
-            KeyboardButtonKey.Key6,
-            KeyboardButtonKey.Key7,
-            KeyboardButtonKey.Key8,
-            KeyboardButtonKey.Key9 -> {
-                if (viewModelState.enteredCode().length < viewModelState.codeLength()) {
-                    val newCode = viewModelState.enteredCode() + key.string
-                    viewModelState.dispatch {
-                        enteredCode.post(newCode)
-                    }
-                    if (newCode.length == viewModelState.codeLength()) {
-                        verifyConfirmationCode(viewModelState.codeId, Code(newCode))
-                    }
-                }
-            }
-            KeyboardButtonKey.Delete -> {
-                if (viewModelState.enteredCode().isNotEmpty()) {
-                    viewModelState.dispatch {
-                        enteredCode.post(enteredCode().substring(0, enteredCode().lastIndex))
-                        codeInputState.post(CodeInputState.Default)
-                    }
-                }
-            }
-            KeyboardButtonKey.Fake -> {}
+    private val handleKey = object : HandleKeyOperation() {
+        override fun onUpdateCode(code: String) = viewModelState.dispatch {
+            enteredCode.post(code)
+            codeInputState.post(CodeInputState.Default)
+        }
+        override fun onCodeCompletelyEntered(code: String) {
+            verifyConfirmationCode.process(VerifyConfirmationCodeOperation.Data(viewModelState.codeId, Code(code)))
         }
     }
 
-    private fun requireConfirmationCode(phoneNumber: PhoneNumber) {
-        if (viewModelState.requireCodeOperationActive || !viewModelState.actual.requireCodeBtnEnabled) {
-            return
+    private val requireConfirmationCode = object : RequireConfirmationCodeOperation(viewModelScope, dispatchers) {
+        override fun canProcess() = viewModelState.requireCodeBtnEnabled
+        override fun onActivityChanged(isActive: Boolean) = viewModelState.dispatch {
+            requireCodeOperationActive = isActive
         }
-        dispatchers.launchMain(viewModelScope) {
+        override fun onStandardError(error: StandardError) = viewModelState.dispatch {
+            errorState = ErrorState(true, handleError.map(error))
+        }
+        override fun onSuccess(data: RequireConfirmationCodeResult) {
             viewModelState.dispatch {
-                requireCodeOperationActive = true
+                enteredCode.value = ""
+                codeInputState.value = CodeInputState.Default
+                codeLength.value = data.codeLength.data
+                codeId = data.codeId
             }
-            val result = requireConfirmationCodeUseCase.process(phoneNumber)
-            viewModelState.dispatch {
-                requireCodeOperationActive = false
-            }
-            when (result) {
-                is OperationResult.StandardFailure -> {
-                    viewModelState.dispatch {
-                        errorState = ErrorState(true, handleError.map(result.error))
-                    }
-                }
-                is OperationResult.SpecificFailure -> {
-                    when (result.error) {
-                        RequireConfirmationCodeError.UserBlocked -> {
+            startTimer(data.resendingTimeInterval.data)
+        }
+        override suspend fun requireConfirmationCode(phoneNumber: PhoneNumber): OperationResult<RequireConfirmationCodeResult, RequireConfirmationCodeError> {
+            return requireConfirmationCodeUseCase.process(phoneNumber)
+        }
+    }
 
-                        }
-                        RequireConfirmationCodeError.WrongCode -> {
-                            viewModelState.dispatch {
-                                enteredCode.value = ""
-                                codeInputState.value = CodeInputState.Error
-                            }
-                        }
-                        is RequireConfirmationCodeError.UserTemporaryBlocked -> {
-
-                        }
-                        RequireConfirmationCodeError.InvalidData -> {
-                            viewModelState.dispatch {
-                                errorState = ErrorState(true, handleError.map(StandardError.Unknown(null)))
-                            }
-                        }
-                    }
+    private val verifyConfirmationCode = object : VerifyConfirmationCodeOperation(viewModelScope, dispatchers) {
+        override fun onActivityChanged(isActive: Boolean) = viewModelState.dispatch {
+            requireCodeOperationActive = isActive
+        }
+        override fun onWrongCode() = viewModelState.dispatch {
+            enteredCode.post("")
+            codeInputState.value = CodeInputState.Error
+        }
+        override fun onStandardError(error: StandardError) = viewModelState.dispatch {
+            errorState = ErrorState(true, handleError.map(error))
+        }
+        override fun onSuccess(data: Unit) {
+            dispatchers.launchMain(viewModelScope) {
+                timerJob?.cancelAndJoin()
+                viewModelState.dispatch {
+                    codeInputState.value = CodeInputState.Success
                 }
-                is OperationResult.Success -> {
-                    viewModelState.dispatch {
-                        enteredCode.value = ""
-                        codeInputState.value = CodeInputState.Default
-                        codeLength.value = result.data.codeLength.data
-                        codeId = result.data.codeId
-                    }
-                    startTimer(result.data.resendingTimeInterval.data)
-                }
+                dispatchEffectSafely(
+                    Milliseconds(500),
+                    UiEffect.Navigation(
+                        NavigationEvent.ReplaceLast(
+                            Screen.SetupUser.BirthDate()))
+                )
             }
+        }
+        override suspend fun verifyConfirmationCode(codeId: Id, code: Code): OperationResult<Unit, VerifyConfirmationCodeError> {
+            return verifyConfirmationCodeUseCase.process(codeId = codeId, code = code)
         }
     }
 
@@ -189,52 +168,6 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             timer(seconds).collect {
                 viewModelState.dispatch {
                     remainingTime = Seconds(it)
-                }
-            }
-        }
-    }
-
-    private fun verifyConfirmationCode(codeId: Id, code: Code) {
-        dispatchers.launchMain(viewModelScope) {
-            viewModelState.dispatch {
-                requireCodeOperationActive = true
-            }
-            val result = verifyConfirmationCodeUseCase.process(
-                codeId = codeId,
-                code = code
-            )
-            viewModelState.dispatch {
-                requireCodeOperationActive = false
-            }
-            when (result) {
-                is OperationResult.StandardFailure -> {
-                    viewModelState.dispatch {
-                        errorState = ErrorState(true, handleError.map(result.error))
-                    }
-                }
-                is OperationResult.SpecificFailure -> {
-                    when (result.error) {
-                        is VerifyConfirmationCodeError.UserTemporaryBlocked -> {
-
-                        }
-                        VerifyConfirmationCodeError.WrongCode -> {
-                            viewModelState.dispatch {
-                                codeInputState.value = CodeInputState.Error
-                            }
-                        }
-                    }
-                }
-                is OperationResult.Success -> {
-                    timerJob?.cancelAndJoin()
-                    viewModelState.dispatch {
-                        codeInputState.value = CodeInputState.Success
-                    }
-                    dispatchEffectSafely(
-                        Milliseconds(500),
-                        UiEffect.Navigation(
-                            NavigationEvent.ReplaceLast(
-                                Screen.SetupUser.BirthDate()))
-                    )
                 }
             }
         }
@@ -272,25 +205,10 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         var codeId: Id = Id("")
         var errorState: ErrorState = ErrorState(false)
         var inDevelopmentDialogVisible: Boolean = false
-
         val codeLength = observableOf(0)
         val enteredCode = observableOf("")
         val codeInputState = observableOf(CodeInputState.Default)
         val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.data == 0
-
-        private val resendButtonTextStrategy = ResendButtonTextStrategy()
-
-        override fun implementation() = this
-
-        override fun map(): UiState = UiState(
-            requireCodeProgressbarVisible = requireCodeOperationActive,
-            phoneNumber = phoneNumber.countryCode + " " + phoneNumber.number,
-            resendButtonText = resendButtonTextStrategy.resolved,
-            requireCodeBtnEnabled = requireCodeBtnEnabled,
-            codeCells = codeCells.actual,
-            errorState = errorState,
-            inDevelopmentDialogVisible = inDevelopmentDialogVisible
-        )
 
         private val codeCells = computable(listOf(), codeLength, enteredCode, codeInputState) { codeLength, enteredCode, codeInputState ->
             List(codeLength) { index ->
@@ -305,17 +223,27 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             }
         }
 
-        private inner class ResendButtonTextStrategy : Strategy<String> {
-            override val resolved get() = when {
-                codeInputState.value == CodeInputState.Success -> ""
-                requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
-                else -> manageResources.string(
-                    R.string.confirmationCode_resendIn,
-                    remainingTime.data / 60,
-                    remainingTime.data % 60
-                )
-            }
+        private val resendButtonText get() = when {
+            codeInputState.value == CodeInputState.Success -> ""
+            requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
+            else -> manageResources.string(
+                R.string.confirmationCode_resendIn,
+                remainingTime.data / 60,
+                remainingTime.data % 60
+            )
         }
+
+        override fun implementation() = this
+
+        override fun map(): UiState = UiState(
+            requireCodeProgressbarVisible = requireCodeOperationActive,
+            phoneNumber = phoneNumber.countryCode + " " + phoneNumber.number,
+            resendButtonText = resendButtonText,
+            requireCodeBtnEnabled = requireCodeBtnEnabled,
+            codeCells = codeCells.actual,
+            errorState = errorState,
+            inDevelopmentDialogVisible = inDevelopmentDialogVisible
+        )
     }
 
     class Base @Inject constructor(
