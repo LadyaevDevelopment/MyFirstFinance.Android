@@ -2,7 +2,6 @@ package ladyaev.development.myFirstFinance.feature.setupUser.presentation.phoneN
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.PhoneNumberValidation
@@ -175,36 +174,29 @@ abstract class PhoneNumberViewModel<StateTransmission : Any, EffectTransmission 
         var phoneNumberValidationResult = PhoneNumberValidation.TestResult(PhoneNumber(), false)
         var errorState: ErrorState = ErrorState(false)
 
-        private val nextButtonEnabledStrategy = NextButtonEnabledStrategy()
-        private val phoneNumberStrategy = PhoneNumberStrategy()
+        private val actualPhoneNumber get() = phoneNumberValidationResult.formattedPhoneNumber ?: actual.phoneNumber
+
+        private val nextButtonEnabled get() = if (phoneNumberValidationResult.formattedPhoneNumber == null) {
+            actual.nextButtonEnabled
+        } else {
+            phoneNumberValidationResult.completed
+        }
+
+        private val phoneNumber get() = if (actualPhoneNumber.isEmpty) {
+            country?.let { PhoneNumber(it.phoneNumberCode) } ?: PhoneNumber()
+        } else {
+            actualPhoneNumber
+        }
 
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
             loadingData = loadingData,
-            nextButtonEnabled = nextButtonEnabledStrategy.resolved,
+            nextButtonEnabled = nextButtonEnabled,
             flagPath = country?.flagPath,
-            phoneNumber = phoneNumberStrategy.resolved,
+            phoneNumber = phoneNumber,
             errorState = errorState
         )
-
-        private inner class NextButtonEnabledStrategy : Strategy<Boolean> {
-            override val resolved get() = if (phoneNumberValidationResult.formattedPhoneNumber == null) {
-                actual.nextButtonEnabled
-            } else {
-                phoneNumberValidationResult.completed
-            }
-        }
-
-        private inner class PhoneNumberStrategy : Strategy<PhoneNumber> {
-            private val actualPhoneNumber get() = phoneNumberValidationResult.formattedPhoneNumber ?: actual.phoneNumber
-
-            override val resolved get() = if (actualPhoneNumber.isEmpty) {
-                country?.let { PhoneNumber(it.phoneNumberCode) } ?: PhoneNumber()
-            } else {
-                actualPhoneNumber
-            }
-        }
     }
 
     class Base @Inject constructor(

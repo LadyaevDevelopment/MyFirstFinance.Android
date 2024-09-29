@@ -13,13 +13,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,55 +46,52 @@ fun CustomTextField(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .height(64.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .applyIf(onClick != null) {
+                clickable(onClick = onClick!!)
+            }
+            .border(1.dp, AppColors.gray, RoundedCornerShape(24.dp))
+            .padding(start = 24.dp, end = 8.dp)
+    ) {
+        BasicTextField(
+            value = text,
+            enabled = enabled,
+            onValueChange = { onTextChanged(it) },
+            keyboardOptions = keyboardOptions,
             modifier = Modifier
-                .height(64.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .applyIf(onClick != null) {
-                    clickable(onClick = onClick!!)
+                .weight(1f)
+                .applyIf(focusRequester != null) {
+                    focusRequester(focusRequester!!)
                 }
-                .border(1.dp, AppColors.gray, RoundedCornerShape(24.dp))
-                .padding(start = 24.dp, end = 8.dp)
-        ) {
-            BasicTextField(
-                value = text,
-                enabled = enabled,
-                onValueChange = { onTextChanged(it) },
-                keyboardOptions = keyboardOptions,
-                modifier = Modifier
-                    .weight(1f)
-                    .applyIf(focusRequester != null) {
-                        focusRequester(focusRequester!!)
+                .onFocusChanged {
+                    isFocused = it.isFocused
+                    onFocusChanged(it.isFocused)
+                },
+            textStyle = MaterialTheme.typography.bodyLarge,
+            decorationBox = { innerTextField ->
+                Box {
+                    if (placeholder.isNotBlank() && text.isEmpty() && !isFocused) {
+                        Text(
+                            text = placeholder,
+                            style = MaterialTheme.typography.bodyLarge.copy(color = AppColors.darkGray),
+                        )
                     }
-                    .onFocusChanged {
-                        isFocused = it.isFocused
-                        onFocusChanged(it.isFocused)
-                    },
-                textStyle = MaterialTheme.typography.bodyLarge,
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (placeholder.isNotBlank() && text.isEmpty() && !isFocused) {
-                            Text(
-                                text = placeholder,
-                                style = MaterialTheme.typography.bodyLarge.copy(color = AppColors.darkGray),
-                            )
-                        }
-                        innerTextField()
-                    }
+                    innerTextField()
                 }
-            )
-            if (trailingButton != null) {
-                Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = trailingButton.onClick) {
-                    Image(
-                        painter = painterResource(id = trailingButton.iconResourceId),
-                        contentDescription = "",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+            }
+        )
+        if (trailingButton != null) {
+            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = trailingButton.onClick) {
+                Image(
+                    painter = painterResource(id = trailingButton.iconResourceId),
+                    contentDescription = "",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }

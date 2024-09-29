@@ -1,6 +1,5 @@
 package ladyaev.development.myFirstFinance.feature.setupUser.presentation.residenceAddress
 
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -21,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.button.ActionButton
 import ladyaev.development.myFirstFinance.core.ui.controls.container.AnimatedVisibilityContainer
@@ -65,8 +62,6 @@ fun ResidenceAddressScreen(
     val state by viewModel.state.observeAsState(ResidenceAddressViewModel.UiState())
     val contentScrollState = rememberScrollState()
 
-    val scope = rememberCoroutineScope()
-
     CustomScaffold(
         onClick = {
             titleCollapsed = false
@@ -92,13 +87,6 @@ fun ResidenceAddressScreen(
                         letterSpacing = -(3.sp)
                     )
                 },
-                animationListener = {
-                    if (titleCollapsed) {
-                        scope.launch {
-                            contentScrollState.animateScrollBy(contentScrollState.maxValue.toFloat())
-                        }
-                    }
-                }
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = stringResource(id = R.string.birthDate_subtitle))

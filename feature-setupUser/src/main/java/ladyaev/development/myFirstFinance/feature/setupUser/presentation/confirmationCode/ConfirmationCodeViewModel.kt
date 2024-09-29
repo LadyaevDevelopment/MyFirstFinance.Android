@@ -12,8 +12,7 @@ import ladyaev.development.myFirstFinance.core.common.misc.PhoneNumber
 import ladyaev.development.myFirstFinance.core.common.misc.Seconds
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.ManageResources
-import ladyaev.development.myFirstFinance.core.common.utils.computable
-import ladyaev.development.myFirstFinance.core.common.utils.observableOf
+import ladyaev.development.myFirstFinance.core.common.utils.memoizedComputable
 import ladyaev.development.myFirstFinance.core.di.timer
 import ladyaev.development.myFirstFinance.core.resources.R
 import ladyaev.development.myFirstFinance.core.ui.controls.input.inputCell.InputCellData
@@ -78,8 +77,8 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             is UserEvent.DigitalKeyPressed -> {
                 handleKey.process(HandleKeyOperation.Data(
                     event.key,
-                    viewModelState.enteredCode(),
-                    viewModelState.codeLength()
+                    viewModelState.enteredCode,
+                    viewModelState.codeLength
                 ))
             }
             UserEvent.ResendButtonClick -> {
@@ -103,8 +102,8 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
 
     private val handleKey = object : HandleKeyOperation() {
         override fun onUpdateCode(code: String) = viewModelState.dispatch {
-            enteredCode.post(code)
-            codeInputState.post(CodeInputState.Default)
+            enteredCode = code
+            codeInputState = CodeInputState.Default
         }
         override fun onCodeCompletelyEntered(code: String) {
             verifyConfirmationCode.process(VerifyConfirmationCodeOperation.Data(viewModelState.codeId, Code(code)))
@@ -121,9 +120,9 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         }
         override fun onSuccess(data: RequireConfirmationCodeResult) {
             viewModelState.dispatch {
-                enteredCode.value = ""
-                codeInputState.value = CodeInputState.Default
-                codeLength.value = data.codeLength.data
+                enteredCode = ""
+                codeInputState = CodeInputState.Default
+                codeLength = data.codeLength.data
                 codeId = data.codeId
             }
             startTimer(data.resendingTimeInterval.data)
@@ -138,8 +137,8 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             requireCodeOperationActive = isActive
         }
         override fun onWrongCode() = viewModelState.dispatch {
-            enteredCode.post("")
-            codeInputState.value = CodeInputState.Error
+            enteredCode = ""
+            codeInputState = CodeInputState.Error
         }
         override fun onStandardError(error: StandardError) = viewModelState.dispatch {
             errorState = ErrorState(true, handleError.map(error))
@@ -148,7 +147,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             dispatchers.launchMain(viewModelScope) {
                 timerJob?.cancelAndJoin()
                 viewModelState.dispatch {
-                    codeInputState.value = CodeInputState.Success
+                    codeInputState = CodeInputState.Success
                 }
                 dispatchEffectSafely(
                     Milliseconds(500),
@@ -205,12 +204,13 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         var codeId: Id = Id("")
         var errorState: ErrorState = ErrorState(false)
         var inDevelopmentDialogVisible: Boolean = false
-        val codeLength = observableOf(0)
-        val enteredCode = observableOf("")
-        val codeInputState = observableOf(CodeInputState.Default)
+        var codeLength = 0
+        var enteredCode = ""
+        var codeInputState = CodeInputState.Default
+
         val requireCodeBtnEnabled get() = !requireCodeOperationActive && remainingTime.data == 0
 
-        private val codeCells = computable(listOf(), codeLength, enteredCode, codeInputState) { codeLength, enteredCode, codeInputState ->
+        private val codeCells = memoizedComputable { codeLength: Int, enteredCode: String, codeInputState: CodeInputState ->
             List(codeLength) { index ->
                 InputCellData(
                     text = enteredCode.elementAtOrNull(index)?.toString() ?: "",
@@ -224,7 +224,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
         }
 
         private val resendButtonText get() = when {
-            codeInputState.value == CodeInputState.Success -> ""
+            codeInputState == CodeInputState.Success -> ""
             requireCodeBtnEnabled -> manageResources.string(R.string.confirmationCode_resend)
             else -> manageResources.string(
                 R.string.confirmationCode_resendIn,
@@ -240,7 +240,7 @@ open class ConfirmationCodeViewModel<StateTransmission : Any, EffectTransmission
             phoneNumber = phoneNumber.countryCode + " " + phoneNumber.number,
             resendButtonText = resendButtonText,
             requireCodeBtnEnabled = requireCodeBtnEnabled,
-            codeCells = codeCells.actual,
+            codeCells = codeCells(codeLength, enteredCode, codeInputState),
             errorState = errorState,
             inDevelopmentDialogVisible = inDevelopmentDialogVisible
         )

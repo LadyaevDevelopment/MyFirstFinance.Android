@@ -2,7 +2,6 @@ package ladyaev.development.myFirstFinance.feature.setupUser.presentation.confir
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import ladyaev.development.myFirstFinance.core.common.interfaces.Strategy
 import ladyaev.development.myFirstFinance.core.common.misc.Code
 import ladyaev.development.myFirstFinance.core.common.misc.Milliseconds
 import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
@@ -157,31 +156,25 @@ open class ConfirmPinCodeViewModel<StateTransmission : Any, EffectTransmission :
         var errorState: ErrorState = ErrorState(false)
         var operationActive: Boolean = false
 
-        private val pinCodeMarkersStrategy = PinCodeMarkersStrategy()
+        private val pinCodeMarkers get() = if (enteredCode.length == codeLength) {
+            if (enteredCode == codeToConfirm) {
+                List(codeLength) { DotMarkerState.Success }
+            } else {
+                List(codeLength) { DotMarkerState.Error }
+            }
+        } else {
+            List(codeLength) { index ->
+                if (index < enteredCode.length) DotMarkerState.Active else DotMarkerState.Default
+            }
+        }
 
         override fun implementation() = this
 
         override fun map(): UiState = UiState(
-            codeMarkers = pinCodeMarkersStrategy.resolved,
+            codeMarkers = pinCodeMarkers,
             errorState = errorState,
             progressbarVisible = operationActive
         )
-
-        private inner class PinCodeMarkersStrategy : Strategy.Base<List<DotMarkerState>>() {
-            override fun actualKeyArgument() = enteredCode
-
-            override fun resolve(): List<DotMarkerState> = if (enteredCode.length == codeLength) {
-                if (enteredCode == codeToConfirm) {
-                    List(codeLength) { DotMarkerState.Success }
-                } else {
-                    List(codeLength) { DotMarkerState.Error }
-                }
-            } else {
-                List(codeLength) { index ->
-                    if (index < enteredCode.length) DotMarkerState.Active else DotMarkerState.Default
-                }
-            }
-        }
     }
 
     class Base @Inject constructor(
