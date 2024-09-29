@@ -1,5 +1,6 @@
 package ladyaev.development.myfirstfinance.data.api.repositories
 
+import ladyaev.development.myFirstFinance.core.common.utils.ManageDispatchers
 import ladyaev.development.myFirstFinance.core.common.utils.UserData
 import ladyaev.development.myfirstfinance.core.api.apiclients.interfaces.MiscApiClient
 import ladyaev.development.myfirstfinance.data.api.extensions.commonError
@@ -13,33 +14,38 @@ import javax.inject.Inject
 
 class MiscRepositoryRemote @Inject constructor(
     private val miscApiClient: MiscApiClient,
-    private val userData: UserData
+    private val userData: UserData,
+    private val dispatchers: ManageDispatchers
 ) : MiscRepository {
     override suspend fun policyDocuments(): OperationResult<RequirePolicyDocumentsResult, Unit> {
-        return try {
-            val response = miscApiClient.policyDocuments(userData.accessToken)
-            val result = response.responseData?.documents?.map { it.toDomain() }
-            return if (result != null) {
-                OperationResult.Success(RequirePolicyDocumentsResult(result))
-            } else {
-                OperationResult.StandardFailure(StandardError.Unknown(null))
+        return dispatchers.withIO {
+            try {
+                val response = miscApiClient.policyDocuments(userData.accessToken)
+                val result = response.responseData?.documents?.map { it.toDomain() }
+                if (result != null) {
+                    OperationResult.Success(RequirePolicyDocumentsResult(result))
+                } else {
+                    OperationResult.StandardFailure(StandardError.Unknown(null))
+                }
+            } catch (ex: Exception) {
+                OperationResult.StandardFailure(ex.commonError())
             }
-        } catch (ex: Exception) {
-            OperationResult.StandardFailure(ex.commonError())
         }
     }
 
     override suspend fun countries(): OperationResult<RequireCountriesResult, Unit> {
-        return try {
-            val response = miscApiClient.countries(userData.accessToken)
-            val result = response.responseData?.countries?.map { it.toDomain() }
-            return if (result != null) {
-                OperationResult.Success(RequireCountriesResult(result))
-            } else {
-                OperationResult.StandardFailure(StandardError.Unknown(null))
+        return dispatchers.withIO {
+            try {
+                val response = miscApiClient.countries(userData.accessToken)
+                val result = response.responseData?.countries?.map { it.toDomain() }
+                if (result != null) {
+                    OperationResult.Success(RequireCountriesResult(result))
+                } else {
+                    OperationResult.StandardFailure(StandardError.Unknown(null))
+                }
+            } catch (ex: Exception) {
+                OperationResult.StandardFailure(ex.commonError())
             }
-        } catch (ex: Exception) {
-            OperationResult.StandardFailure(ex.commonError())
         }
     }
 }
